@@ -1,0 +1,681 @@
+/* ===================================
+   VOICE VISUALIZER - Stunning Dark Theme
+   =================================== */
+
+:root {
+    /* Neon Colors */
+    --neon-pink: #ff00ff;
+    --neon-cyan: #00ffff;
+    --neon-purple: #9d00ff;
+    --neon-blue: #0066ff;
+    --neon-green: #00ff66;
+    --neon-orange: #ff6600;
+    --neon-yellow: #ffff00;
+    
+    /* UI Colors */
+    --bg-dark: #0a0a0f;
+    --bg-card: rgba(15, 15, 25, 0.8);
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.6);
+    --border-glow: rgba(0, 255, 255, 0.3);
+    
+    /* Gradients */
+    --gradient-main: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
+    --gradient-fire: linear-gradient(135deg, #ff0000, #ff6600, #ffff00);
+    --gradient-ocean: linear-gradient(135deg, #0066ff, #00ffff, #00ff99);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Rajdhani', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    overflow: hidden;
+    min-height: 100vh;
+    cursor: default;
+}
+
+/* Main Canvas */
+#visualizer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+}
+
+/* Overlay UI Container */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px;
+}
+
+.overlay > * {
+    pointer-events: auto;
+}
+
+/* ===================================
+   HEADER
+   =================================== */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 25px;
+    background: var(--bg-card);
+    border-radius: 20px;
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-glow);
+    box-shadow: 
+        0 0 30px rgba(0, 255, 255, 0.1),
+        inset 0 0 30px rgba(0, 255, 255, 0.05);
+}
+
+.logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-icon {
+    font-size: 2rem;
+    animation: pulse 2s ease-in-out infinite;
+    background: var(--gradient-main);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.accent {
+    background: var(--gradient-main);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Audio Level Bar */
+.audio-level {
+    width: 200px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.level-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--gradient-main);
+    border-radius: 10px;
+    transition: width 0.05s ease;
+    box-shadow: 0 0 20px var(--neon-cyan);
+}
+
+/* ===================================
+   MODE SELECTOR
+   =================================== */
+.mode-selector {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.mode-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 12px 20px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    color: var(--text-secondary);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.mode-btn:hover {
+    border-color: var(--neon-cyan);
+    color: var(--text-primary);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 255, 255, 0.2);
+}
+
+.mode-btn.active {
+    background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(157, 0, 255, 0.2));
+    border-color: var(--neon-cyan);
+    color: var(--text-primary);
+    box-shadow: 
+        0 0 30px rgba(0, 255, 255, 0.3),
+        inset 0 0 20px rgba(0, 255, 255, 0.1);
+}
+
+.mode-icon {
+    font-size: 1.5rem;
+}
+
+.mode-name {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ===================================
+   CONTROLS
+   =================================== */
+.controls {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    z-index: 20;
+}
+
+.start-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 30px 50px;
+    background: var(--gradient-main);
+    border: none;
+    border-radius: 30px;
+    color: white;
+    font-family: 'Orbitron', monospace;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 
+        0 0 40px rgba(0, 255, 255, 0.4),
+        0 0 80px rgba(157, 0, 255, 0.3);
+    animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.start-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 
+        0 0 60px rgba(0, 255, 255, 0.6),
+        0 0 100px rgba(157, 0, 255, 0.5);
+}
+
+.start-btn.active {
+    background: linear-gradient(135deg, #ff0066, #ff6600);
+    animation: none;
+}
+
+.btn-icon {
+    font-size: 2rem;
+}
+
+.btn-text {
+    letter-spacing: 2px;
+}
+
+.settings-toggle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--border-glow);
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.settings-toggle:hover {
+    transform: rotate(90deg);
+    border-color: var(--neon-cyan);
+}
+
+/* ===================================
+   SETTINGS PANEL
+   =================================== */
+.settings-panel {
+    position: fixed;
+    bottom: 180px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-card);
+    border: 1px solid var(--border-glow);
+    border-radius: 20px;
+    padding: 25px;
+    backdrop-filter: blur(20px);
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 90vw;
+    transition: all 0.3s ease;
+}
+
+.settings-panel.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%) translateY(20px);
+}
+
+.setting {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 120px;
+}
+
+.setting label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-secondary);
+}
+
+.setting input[type="range"] {
+    -webkit-appearance: none;
+    width: 120px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    outline: none;
+}
+
+.setting input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    background: var(--gradient-main);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 15px var(--neon-cyan);
+}
+
+.setting select {
+    padding: 8px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    color: white;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+}
+
+.setting select:focus {
+    border-color: var(--neon-cyan);
+}
+
+.setting input[type="checkbox"] {
+    width: 50px;
+    height: 25px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 25px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.setting input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    width: 21px;
+    height: 21px;
+    background: white;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s ease;
+}
+
+.setting input[type="checkbox"]:checked {
+    background: var(--gradient-main);
+}
+
+.setting input[type="checkbox"]:checked::before {
+    left: 27px;
+}
+
+/* ===================================
+   RECORD CONTROLS
+   =================================== */
+.record-controls {
+    position: fixed;
+    right: 20px;
+    bottom: 50%;
+    transform: translateY(50%);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.record-btn, .screenshot-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.record-btn:hover {
+    border-color: #ff0000;
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+}
+
+.record-btn.recording {
+    background: #ff0000;
+    border-color: #ff0000;
+    animation: record-pulse 1s ease-in-out infinite;
+}
+
+.screenshot-btn:hover {
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+}
+
+.record-icon {
+    font-size: 1.8rem;
+}
+
+/* ===================================
+   STATS DISPLAY
+   =================================== */
+.stats {
+    position: fixed;
+    left: 20px;
+    bottom: 50%;
+    transform: translateY(50%);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    background: var(--bg-card);
+    border-radius: 15px;
+    border: 1px solid var(--border-glow);
+    backdrop-filter: blur(10px);
+    min-width: 80px;
+}
+
+.stat-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-secondary);
+}
+
+.stat-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.2rem;
+    font-weight: 700;
+    background: var(--gradient-main);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ===================================
+   FREQUENCY BARS
+   =================================== */
+.freq-bars {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 3px;
+    padding: 0 20px;
+    pointer-events: none;
+}
+
+.freq-bar {
+    width: 4px;
+    min-height: 4px;
+    background: var(--gradient-main);
+    border-radius: 2px;
+    transition: height 0.05s ease;
+    box-shadow: 0 0 10px var(--neon-cyan);
+}
+
+/* ===================================
+   RECORDING INDICATOR
+   =================================== */
+.recording-indicator {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 25px;
+    background: rgba(255, 0, 0, 0.2);
+    border: 1px solid #ff0000;
+    border-radius: 30px;
+    backdrop-filter: blur(10px);
+}
+
+.recording-indicator.hidden {
+    display: none;
+}
+
+.rec-dot {
+    width: 12px;
+    height: 12px;
+    background: #ff0000;
+    border-radius: 50%;
+    animation: rec-blink 1s ease-in-out infinite;
+}
+
+.rec-text {
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+    color: #ff0000;
+    letter-spacing: 2px;
+}
+
+.rec-time {
+    font-family: 'Orbitron', monospace;
+    color: white;
+}
+
+/* ===================================
+   TOAST NOTIFICATIONS
+   =================================== */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    padding: 15px 25px;
+    background: var(--bg-card);
+    border: 1px solid var(--neon-cyan);
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+    animation: slide-in 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.toast.success {
+    border-color: var(--neon-green);
+}
+
+.toast.error {
+    border-color: #ff0000;
+}
+
+/* ===================================
+   ANIMATIONS
+   =================================== */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes glow-pulse {
+    0%, 100% { 
+        box-shadow: 
+            0 0 40px rgba(0, 255, 255, 0.4),
+            0 0 80px rgba(157, 0, 255, 0.3);
+    }
+    50% { 
+        box-shadow: 
+            0 0 60px rgba(0, 255, 255, 0.6),
+            0 0 100px rgba(157, 0, 255, 0.5);
+    }
+}
+
+@keyframes record-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes rec-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+@keyframes slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ===================================
+   RESPONSIVE
+   =================================== */
+@media (max-width: 768px) {
+    .header {
+        padding: 12px 15px;
+    }
+    
+    .logo {
+        font-size: 1rem;
+    }
+    
+    .audio-level {
+        width: 100px;
+    }
+    
+    .mode-btn {
+        padding: 10px 15px;
+    }
+    
+    .start-btn {
+        padding: 20px 35px;
+        font-size: 1rem;
+    }
+    
+    .stats {
+        left: 10px;
+        gap: 10px;
+    }
+    
+    .stat {
+        padding: 10px;
+        min-width: 60px;
+    }
+    
+    .record-controls {
+        right: 10px;
+    }
+    
+    .settings-panel {
+        padding: 15px;
+        gap: 15px;
+    }
+}
+
+/* ===================================
+   INTRO ANIMATION
+   =================================== */
+.intro-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg-dark);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fade-out 1s ease 2s forwards;
+}
+
+.intro-text {
+    font-family: 'Orbitron', monospace;
+    font-size: 3rem;
+    background: var(--gradient-main);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: zoom-in 2s ease;
+}
+
+@keyframes fade-out {
+    to { opacity: 0; pointer-events: none; }
+}
+
+@keyframes zoom-in {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}

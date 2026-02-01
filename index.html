@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Visualizer | Transform Your Voice Into Art</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Main Canvas for Visuals -->
+    <canvas id="visualizer"></canvas>
+    
+    <!-- Overlay UI -->
+    <div class="overlay">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="logo">
+                <span class="logo-icon">◉</span>
+                VOICE<span class="accent">VISUALIZER</span>
+            </h1>
+            <div class="audio-level">
+                <div class="level-bar" id="levelBar"></div>
+            </div>
+        </header>
+
+        <!-- Mode Selector -->
+        <nav class="mode-selector">
+            <button class="mode-btn active" data-mode="particles">
+                <span class="mode-icon">✨</span>
+                <span class="mode-name">Particles</span>
+            </button>
+            <button class="mode-btn" data-mode="waves">
+                <span class="mode-icon">🌊</span>
+                <span class="mode-name">Waves</span>
+            </button>
+            <button class="mode-btn" data-mode="geometric">
+                <span class="mode-icon">🔷</span>
+                <span class="mode-name">Geometric</span>
+            </button>
+            <button class="mode-btn" data-mode="abstract">
+                <span class="mode-icon">🌀</span>
+                <span class="mode-name">Abstract</span>
+            </button>
+            <button class="mode-btn" data-mode="fireworks">
+                <span class="mode-icon">🎆</span>
+                <span class="mode-name">Fireworks</span>
+            </button>
+        </nav>
+
+        <!-- Control Panel -->
+        <div class="controls">
+            <!-- Main Start Button -->
+            <button class="start-btn" id="startBtn">
+                <span class="btn-icon">🎤</span>
+                <span class="btn-text">TAP TO START</span>
+            </button>
+
+            <!-- Settings Toggle -->
+            <button class="settings-toggle" id="settingsToggle">
+                <span>⚙️</span>
+            </button>
+        </div>
+
+        <!-- Settings Panel -->
+        <div class="settings-panel hidden" id="settingsPanel">
+            <div class="setting">
+                <label>Sensitivity</label>
+                <input type="range" id="sensitivity" min="1" max="100" value="50">
+            </div>
+            <div class="setting">
+                <label>Color Theme</label>
+                <select id="colorTheme">
+                    <option value="neon">Neon Dreams</option>
+                    <option value="sunset">Sunset Fire</option>
+                    <option value="ocean">Ocean Deep</option>
+                    <option value="forest">Forest Glow</option>
+                    <option value="rainbow">Rainbow</option>
+                </select>
+            </div>
+            <div class="setting">
+                <label>Harmonize</label>
+                <input type="checkbox" id="harmonize">
+            </div>
+            <div class="setting">
+                <label>Background</label>
+                <select id="bgStyle">
+                    <option value="dark">Dark Void</option>
+                    <option value="gradient">Gradient</option>
+                    <option value="stars">Starfield</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Recording Controls -->
+        <div class="record-controls">
+            <button class="record-btn" id="recordBtn" title="Record Video">
+                <span class="record-icon">⏺</span>
+            </button>
+            <button class="screenshot-btn" id="screenshotBtn" title="Screenshot">
+                <span>📷</span>
+            </button>
+        </div>
+
+        <!-- Stats Display -->
+        <div class="stats" id="stats">
+            <div class="stat">
+                <span class="stat-label">PITCH</span>
+                <span class="stat-value" id="pitchValue">--</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">VOLUME</span>
+                <span class="stat-value" id="volumeValue">--</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">BPM</span>
+                <span class="stat-value" id="bpmValue">--</span>
+            </div>
+        </div>
+
+        <!-- Frequency Bars (small visualization) -->
+        <div class="freq-bars" id="freqBars"></div>
+    </div>
+
+    <!-- Recording Indicator -->
+    <div class="recording-indicator hidden" id="recordingIndicator">
+        <span class="rec-dot"></span>
+        <span class="rec-text">REC</span>
+        <span class="rec-time" id="recTime">00:00</span>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="audio.js"></script>
+    <script src="visuals.js"></script>
+    <script src="harmonizer.js"></script>
+    <script src="recorder.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
