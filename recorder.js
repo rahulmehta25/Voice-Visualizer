@@ -154,42 +154,47 @@ class Recorder {
         canvas.height = 1350;
         const ctx = canvas.getContext('2d');
 
-        const palette = payload.palette || ['#57f5ff', '#9e5bff', '#6dff92'];
+        const palette = payload.palette || ['#e23a8f', '#8a5cd6', '#f3eef7'];
         const frequencies = Array.isArray(payload.frequencyProfile) && payload.frequencyProfile.length
             ? payload.frequencyProfile
             : new Array(64).fill(0);
 
         const background = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        background.addColorStop(0, '#050915');
-        background.addColorStop(0.5, '#0a1328');
-        background.addColorStop(1, '#060916');
+        background.addColorStop(0, '#07060a');
+        background.addColorStop(0.5, '#0a0810');
+        background.addColorStop(1, '#07060a');
         ctx.fillStyle = background;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        for (let i = 0; i < 90; i++) {
+        for (let i = 0; i < 60; i++) {
             const x = Math.random() * canvas.width;
             const y = Math.random() * canvas.height;
-            const r = Math.random() * 1.6;
-            ctx.fillStyle = `rgba(190, 225, 255, ${Math.random() * 0.3})`;
+            const r = Math.random() * 1.2;
+            ctx.fillStyle = `rgba(243, 238, 247, ${Math.random() * 0.14})`;
             ctx.beginPath();
             ctx.arc(x, y, r, 0, Math.PI * 2);
             ctx.fill();
         }
 
         const glow = ctx.createRadialGradient(540, 520, 120, 540, 520, 520);
-        glow.addColorStop(0, 'rgba(120, 225, 255, 0.33)');
-        glow.addColorStop(1, 'rgba(120, 225, 255, 0)');
+        glow.addColorStop(0, 'rgba(226, 58, 143, 0.14)');
+        glow.addColorStop(0.55, 'rgba(138, 92, 214, 0.06)');
+        glow.addColorStop(1, 'rgba(226, 58, 143, 0)');
         ctx.fillStyle = glow;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        ctx.fillStyle = '#f5f8ff';
-        ctx.font = '900 54px Orbitron, sans-serif';
+        ctx.fillStyle = 'rgba(243, 238, 247, 0.48)';
+        ctx.font = '400 20px "IBM Plex Mono", monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('SOUND PORTRAIT', 540, 106);
+        ctx.fillText('SIGNAL THEATRE', 540, 88);
 
-        ctx.font = '600 30px Rajdhani, sans-serif';
-        ctx.fillStyle = 'rgba(229, 240, 255, 0.86)';
-        ctx.fillText(payload.modeLabel || 'Waveform', 540, 156);
+        ctx.fillStyle = '#f3eef7';
+        ctx.font = '400 64px "Instrument Serif", Georgia, serif';
+        ctx.fillText('Sound Portrait', 540, 150);
+
+        ctx.font = '400 24px Sora, sans-serif';
+        ctx.fillStyle = 'rgba(243, 238, 247, 0.55)';
+        ctx.fillText(payload.modeLabel || 'Wave', 540, 196);
 
         const centerX = 540;
         const centerY = 520;
@@ -222,26 +227,26 @@ class Recorder {
         ctx.beginPath();
         ctx.arc(centerX, centerY, 114, 0, Math.PI * 2);
         const core = ctx.createRadialGradient(centerX, centerY, 10, centerX, centerY, 110);
-        core.addColorStop(0, 'rgba(243, 251, 255, 0.95)');
-        core.addColorStop(1, 'rgba(113, 198, 255, 0.20)');
+        core.addColorStop(0, 'rgba(243, 238, 247, 0.92)');
+        core.addColorStop(1, 'rgba(226, 58, 143, 0.1)');
         ctx.fillStyle = core;
         ctx.fill();
 
-        ctx.strokeStyle = 'rgba(218, 242, 255, 0.6)';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(226, 58, 143, 0.35)';
+        ctx.lineWidth = 1;
         ctx.stroke();
 
         const cards = [
-            { label: 'BPM', value: payload.bpm || 'Idle' },
+            { label: 'Tempo', value: payload.bpm || '--' },
             { label: 'Peak', value: `${Math.round((payload.peakVolume || 0) * 100)}%` },
             { label: 'Avg Energy', value: `${Math.round((payload.averageVolume || 0) * 100)}%` },
             { label: 'Beats', value: payload.beatCount ?? 0 },
-            { label: 'Top Note', value: payload.dominantNote || 'Idle' },
+            { label: 'Top Note', value: payload.dominantNote || '--' },
             { label: 'Duration', value: payload.durationLabel || '00:00' }
         ];
 
         ctx.textAlign = 'left';
-        ctx.font = '600 25px Rajdhani, sans-serif';
+        ctx.font = '500 22px "IBM Plex Mono", monospace';
 
         cards.forEach((card, index) => {
             const col = index % 2;
@@ -249,25 +254,25 @@ class Recorder {
             const x = 150 + col * 390;
             const y = 780 + row * 140;
 
-            ctx.fillStyle = 'rgba(17, 27, 54, 0.74)';
-            ctx.strokeStyle = 'rgba(128, 188, 255, 0.33)';
+            ctx.fillStyle = 'rgba(7, 6, 10, 0.9)';
+            ctx.strokeStyle = 'rgba(243, 238, 247, 0.14)';
             ctx.lineWidth = 1;
-            this.roundRect(ctx, x, y, 330, 100, 20);
+            this.roundRect(ctx, x, y, 330, 100, 0);
             ctx.fill();
             ctx.stroke();
 
-            ctx.fillStyle = 'rgba(177, 209, 255, 0.88)';
-            ctx.fillText(card.label.toUpperCase(), x + 22, y + 36);
+            ctx.fillStyle = 'rgba(243, 238, 247, 0.48)';
+            ctx.fillText(card.label.toUpperCase(), x + 24, y + 38);
 
-            ctx.fillStyle = '#f7fbff';
-            ctx.font = '700 36px Orbitron, sans-serif';
-            ctx.fillText(String(card.value), x + 22, y + 74);
-            ctx.font = '600 25px Rajdhani, sans-serif';
+            ctx.fillStyle = '#f3eef7';
+            ctx.font = '400 34px "Instrument Serif", Georgia, serif';
+            ctx.fillText(String(card.value), x + 24, y + 74);
+            ctx.font = '400 20px "IBM Plex Mono", monospace';
         });
 
         ctx.textAlign = 'center';
-        ctx.fillStyle = 'rgba(220, 236, 255, 0.74)';
-        ctx.font = '600 24px Rajdhani, sans-serif';
+        ctx.fillStyle = 'rgba(243, 238, 247, 0.42)';
+        ctx.font = '300 20px Sora, sans-serif';
         ctx.fillText(payload.timestampLabel || new Date().toLocaleString(), 540, 1260);
 
         const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));

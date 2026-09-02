@@ -1,6 +1,6 @@
 /**
  * Voice Visualizer App
- * Coordinates audio analysis, rendering, recording, and portrait generation.
+ * Signal Theatre controller for audio, rendering, and portraits.
  */
 
 class VoiceVisualizerApp {
@@ -14,27 +14,27 @@ class VoiceVisualizerApp {
         this.recordingMetrics = null;
         this.lastPortrait = null;
         this.beatIndicatorTimer = null;
+        this.recProgressTimer = null;
 
         this.modeLabels = {
-            waveform: 'Waveform',
-            radial: 'Radial Spectrum',
-            cloud: '3D Cloud',
-            aurora: 'Northern Lights'
+            waveform: 'Wave',
+            radial: 'Radial',
+            cloud: 'Cloud',
+            aurora: 'Aurora'
         };
 
         this.modePalettes = {
-            waveform: ['#57f5ff', '#77b5ff', '#9e5bff'],
-            radial: ['#7ff7ff', '#74b8ff', '#ffb861'],
-            cloud: ['#7ee1ff', '#88a8ff', '#d08cff'],
-            aurora: ['#74ffca', '#7cd2ff', '#9d7aff']
+            waveform: ['#e23a8f', '#8a5cd6', '#f3eef7'],
+            radial: ['#e23a8f', '#9a6adf', '#f3eef7'],
+            cloud: ['#e23a8f', '#8a5cd6', '#d7c4f0'],
+            aurora: ['#e23a8f', '#7046b8', '#f3eef7']
         };
-
-        this.idlePlaceholder = 'Idle';
 
         this.canvas = document.getElementById('visualizer');
         this.startBtn = document.getElementById('startBtn');
-        this.idleStartBtn = document.getElementById('idleStartBtn');
+        this.startLabel = document.getElementById('startLabel');
         this.recordBtn = document.getElementById('recordBtn');
+        this.recordLabel = document.getElementById('recordLabel');
         this.screenshotBtn = document.getElementById('screenshotBtn');
         this.levelBar = document.getElementById('levelBar');
         this.levelMeter = document.getElementById('levelMeter');
@@ -46,10 +46,16 @@ class VoiceVisualizerApp {
         this.modeValue = document.getElementById('modeValue');
         this.freqBars = document.getElementById('freqBars');
         this.spectrumState = document.getElementById('spectrumState');
-        this.statusPill = document.getElementById('statusPill');
-        this.statusText = document.getElementById('statusText');
         this.recordingIndicator = document.getElementById('recordingIndicator');
         this.recTime = document.getElementById('recTime');
+        this.recRail = document.getElementById('recRail');
+        this.recRailFill = document.getElementById('recRailFill');
+        this.statusText = document.getElementById('statusText');
+        this.nowPlaying = document.getElementById('nowPlaying');
+        this.idleHint = document.getElementById('idleHint');
+        this.micErrorBand = document.getElementById('micErrorBand');
+        this.micErrorCopy = document.getElementById('micErrorCopy');
+        this.dockActions = document.getElementById('dockActions');
 
         this.portraitPanel = document.getElementById('portraitPanel');
         this.portraitPreview = document.getElementById('portraitPreview');
@@ -68,19 +74,104 @@ class VoiceVisualizerApp {
         this.setupEventListeners();
         this.setupRecorderCallbacks();
         this.modeValue.textContent = this.modeLabels[this.currentMode];
-        this.setSessionState('idle');
-        this.updateRecordAvailability();
+        this.setLevel(0);
+        this.setStageState('idle');
 
         this.renderLoop();
     }
 
+    setStageState(state) {
+        document.body.classList.toggle('is-idle', state === 'idle' || state === 'error');
+        document.body.classList.toggle('is-live', state === 'live' || state === 'recording');
+        document.body.classList.toggle('is-recording', state === 'recording');
+        document.body.classList.toggle('has-mic-error', state === 'error');
+
+        const liveActions = state === 'live' || state === 'recording';
+        this.setDockActionsVisible(liveActions);
+
+        if (state === 'idle') {
+            this.statusText.textContent = 'House dark';
+            this.spectrumState.textContent = 'Waiting';
+            if (this.nowPlaying) {
+                this.nowPlaying.textContent = 'Now playing: silence';
+            }
+            if (this.idleHint) {
+                this.idleHint.hidden = false;
+            }
+        } else if (state === 'error') {
+            this.statusText.textContent = 'No input';
+            this.spectrumState.textContent = 'Unavailable';
+            if (this.nowPlaying) {
+                this.nowPlaying.textContent = 'Now playing: no input';
+            }
+            if (this.idleHint) {
+                this.idleHint.hidden = true;
+            }
+        } else if (state === 'live') {
+            this.statusText.textContent = 'Listening';
+            this.spectrumState.textContent = 'Live';
+            this.clearMicError();
+        } else if (state === 'recording') {
+            this.statusText.textContent = 'Recording';
+            this.spectrumState.textContent = 'Capture';
+        }
+    }
+
+    setDockActionsVisible(visible) {
+        if (!this.dockActions) {
+            return;
+        }
+
+        this.dockActions.hidden = !visible;
+        [this.recordBtn, this.screenshotBtn].forEach((button) => {
+            if (!button) {
+                return;
+            }
+            button.tabIndex = visible ? 0 : -1;
+            if (!visible) {
+                button.setAttribute('aria-hidden', 'true');
+            } else {
+                button.removeAttribute('aria-hidden');
+            }
+        });
+    }
+
+    clearMicError() {
+        if (this.micErrorBand) {
+            this.micErrorBand.classList.add('hidden');
+        }
+        document.body.classList.remove('has-mic-error');
+    }
+
+    showMicError(reason = 'unavailable') {
+        const copy = {
+            denied: 'Microphone permission is needed to listen. Allow access, then try Listen again.',
+            nodevice: 'No input device was found on this machine.',
+            busy: 'The microphone is unavailable right now. Close other apps using it, then try again.',
+            secure: 'Microphone access needs a secure context (localhost or HTTPS).',
+            unsupported: 'This browser cannot access a microphone here.',
+            unavailable: 'Microphone access failed. Check permission and input device.'
+        };
+
+        if (this.micErrorCopy) {
+            this.micErrorCopy.textContent = copy[reason] || copy.unavailable;
+        }
+        if (this.micErrorBand) {
+            this.micErrorBand.classList.remove('hidden');
+        }
+
+        this.setLevel(0);
+        this.updateStats({ volume: 0, pitch: 'Idle', bpm: 'Idle' });
+        this.updateFrequencyBars([]);
+        this.setStageState('error');
+    }
+
     setupEventListeners() {
         this.startBtn.addEventListener('click', () => this.toggleAudio());
-        this.idleStartBtn.addEventListener('click', () => this.toggleAudio());
 
         this.recordBtn.addEventListener('click', async () => {
             if (!this.isRunning || !this.audioEngine) {
-                this.showToast('Start listening first, then record a portrait clip.', 'error');
+                this.showToast('Start listening before recording a portrait.', 'error');
                 return;
             }
 
@@ -88,9 +179,10 @@ class VoiceVisualizerApp {
                 const ok = await this.recorder.startRecording({ maxDurationMs: 9000 });
                 if (ok) {
                     this.startMetricsCapture();
-                    this.showToast('Recording clip. A portrait will generate when it ends.', 'success');
+                    this.startRecProgress(9000);
+                    this.showToast('Recording clip. Portrait generates when you stop.', 'success');
                 } else {
-                    this.showToast('Could not start the portrait clip.', 'error');
+                    this.showToast('Unable to start recording clip.', 'error');
                 }
             } else {
                 this.recorder.stopRecording();
@@ -99,32 +191,33 @@ class VoiceVisualizerApp {
 
         this.screenshotBtn.addEventListener('click', () => {
             const ok = this.recorder.takeScreenshot();
-            this.showToast(ok ? 'Frame saved.' : 'Could not save this frame.', ok ? 'success' : 'error');
+            this.showToast(ok ? 'Frame saved.' : 'Frame capture failed.', ok ? 'success' : 'error');
         });
 
-        document.querySelectorAll('.mode-btn').forEach((button) => {
+        document.querySelectorAll('.scene-btn').forEach((button) => {
             button.addEventListener('click', () => {
-                this.setMode(button.dataset.mode);
+                const mode = button.dataset.mode;
+                this.setMode(mode);
             });
         });
 
-        this.portraitClose.addEventListener('click', () => {
-            this.portraitPanel.classList.add('hidden');
-        });
-
+        this.portraitClose.addEventListener('click', () => this.closePortrait());
         this.portraitShare.addEventListener('click', () => this.sharePortrait());
+
+        this.portraitPanel.addEventListener('click', (event) => {
+            if (event.target === this.portraitPanel) {
+                this.closePortrait();
+            }
+        });
 
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' && !this.portraitPanel.classList.contains('hidden')) {
-                this.portraitPanel.classList.add('hidden');
+                this.closePortrait();
                 return;
             }
 
             const key = event.key.toLowerCase();
-            if (key === ' ' || event.code === 'Space') {
-                if (event.target.closest('button, a, input, textarea')) {
-                    return;
-                }
+            if (key === ' ') {
                 event.preventDefault();
                 this.toggleAudio();
                 return;
@@ -132,7 +225,21 @@ class VoiceVisualizerApp {
 
             if (key === 'r') {
                 event.preventDefault();
+                if (!this.isRunning) {
+                    this.showToast('Start listening before recording a portrait.', 'error');
+                    return;
+                }
                 this.recordBtn.click();
+                return;
+            }
+
+            if (key === 's' && !event.metaKey && !event.ctrlKey) {
+                event.preventDefault();
+                if (!this.isRunning) {
+                    this.showToast('Start listening before saving a frame.', 'error');
+                    return;
+                }
+                this.screenshotBtn.click();
                 return;
             }
 
@@ -143,27 +250,33 @@ class VoiceVisualizerApp {
         });
     }
 
+    closePortrait() {
+        this.portraitPanel.classList.add('hidden');
+    }
+
     setupRecorderCallbacks() {
         this.recorder.onRecordingStart = () => {
             this.recordBtn.classList.add('recording');
-            this.recordBtn.querySelector('.text').textContent = 'Stop recording';
+            this.recordLabel.textContent = 'Stop';
             this.recordingIndicator.classList.remove('hidden');
+            this.recRail.classList.remove('hidden');
             this.recTime.textContent = '00:00';
-            this.setSessionState('recording');
+            this.setStageState('recording');
         };
 
         this.recorder.onRecordingStop = async ({ blob, durationMs }) => {
             this.recordBtn.classList.remove('recording');
-            this.recordBtn.querySelector('.text').textContent = 'Record portrait';
+            this.recordLabel.textContent = 'Record';
             this.recordingIndicator.classList.add('hidden');
-            this.setSessionState(this.isRunning ? 'live' : 'idle');
+            this.stopRecProgress();
+            this.setStageState(this.isRunning ? 'live' : 'idle');
 
             if (blob) {
-                this.showToast('Clip saved. Generating sound portrait.', 'success');
+                this.showToast('Clip saved. Generating sound portrait...', 'success');
             }
 
             if (!this.recordingMetrics || this.recordingMetrics.frames < 2) {
-                this.showToast('Need more audio for a portrait. Try a longer clip.', 'error');
+                this.showToast('Not enough audio data for a portrait.', 'error');
                 return;
             }
 
@@ -180,7 +293,7 @@ class VoiceVisualizerApp {
                 this.portraitPanel.classList.remove('hidden');
                 this.showToast('Sound portrait generated and downloaded.', 'success');
             } else {
-                this.showToast('Portrait generation did not finish.', 'error');
+                this.showToast('Portrait generation failed.', 'error');
             }
         };
 
@@ -189,27 +302,51 @@ class VoiceVisualizerApp {
         };
     }
 
+    startRecProgress(maxDurationMs) {
+        const started = Date.now();
+        this.recRailFill.style.width = '0%';
+
+        clearInterval(this.recProgressTimer);
+        this.recProgressTimer = setInterval(() => {
+            const elapsed = Date.now() - started;
+            const pct = Math.min(100, (elapsed / maxDurationMs) * 100);
+            this.recRailFill.style.width = `${pct}%`;
+            if (pct >= 100) {
+                clearInterval(this.recProgressTimer);
+            }
+        }, 80);
+    }
+
+    stopRecProgress() {
+        clearInterval(this.recProgressTimer);
+        this.recRail.classList.add('hidden');
+        this.recRailFill.style.width = '0%';
+    }
+
     async toggleAudio() {
         if (!this.isRunning) {
+            this.clearMicError();
             this.audioEngine = new AudioEngine();
             const ok = await this.audioEngine.init();
             if (!ok) {
+                const reason = this.audioEngine?.initError?.reason || 'unavailable';
                 this.audioEngine = null;
-                this.showToast('Microphone access was denied.', 'error');
+                this.showMicError(reason);
                 return;
             }
 
             this.audioEngine.setSensitivity(58);
-            this.audioEngine.onBeat = (intensity) => {
-                this.triggerBeatIndicator(intensity);
+            this.audioEngine.onBeat = () => {
+                this.triggerBeatIndicator();
             };
 
             this.isRunning = true;
-            this.startBtn.classList.add('active');
-            this.startBtn.querySelector('.text').textContent = 'Stop listening';
-            this.updateRecordAvailability();
-            this.setSessionState('live');
-            this.showToast('Listening. Pick a mode, then record a portrait.', 'success');
+            this.visualEngine.setLive(true);
+            this.startBtn.classList.add('is-live');
+            this.startLabel.textContent = 'Silence';
+            this.recordBtn.disabled = false;
+            this.setStageState('live');
+            this.showToast('Listening. Switch scenes and record a portrait.', 'success');
             return;
         }
 
@@ -223,13 +360,25 @@ class VoiceVisualizerApp {
         }
 
         this.isRunning = false;
-        this.startBtn.classList.remove('active');
-        this.startBtn.querySelector('.text').textContent = 'Start listening';
-        this.updateRecordAvailability();
-        this.setSessionState('idle');
+        this.visualEngine.setLive(false);
+        this.startBtn.classList.remove('is-live');
+        this.startLabel.textContent = 'Listen';
+        this.recordBtn.disabled = true;
+        this.clearMicError();
+        this.setStageState('idle');
 
-        this.updateStats({ volume: 0, pitch: this.idlePlaceholder, bpm: this.idlePlaceholder });
+        this.updateStats({ volume: 0, pitch: 'Idle', bpm: 'Idle' });
         this.updateFrequencyBars([]);
+        this.setLevel(0);
+    }
+
+    setLevel(volume) {
+        const levelPct = Math.min(100, Math.max(0, Math.round((volume || 0) * 100)));
+        this.levelValue.textContent = `${levelPct}%`;
+        this.levelBar.style.width = `${levelPct}%`;
+        if (this.levelMeter) {
+            this.levelMeter.setAttribute('aria-valuenow', String(levelPct));
+        }
     }
 
     setMode(mode) {
@@ -241,42 +390,9 @@ class VoiceVisualizerApp {
         this.visualEngine.setMode(mode);
         this.modeValue.textContent = this.modeLabels[mode];
 
-        document.querySelectorAll('.mode-btn').forEach((button) => {
-            const isActive = button.dataset.mode === mode;
-            button.classList.toggle('active', isActive);
-            button.setAttribute('aria-pressed', String(isActive));
+        document.querySelectorAll('.scene-btn').forEach((button) => {
+            button.classList.toggle('active', button.dataset.mode === mode);
         });
-    }
-
-    setSessionState(state) {
-        document.body.classList.toggle('is-idle', state === 'idle');
-        document.body.classList.toggle('is-live', state === 'live' || state === 'recording');
-        document.body.classList.toggle('is-recording', state === 'recording');
-
-        const labels = {
-            idle: 'Idle',
-            live: 'Listening',
-            recording: 'Recording'
-        };
-
-        if (this.statusText) {
-            this.statusText.textContent = labels[state] || 'Idle';
-        }
-
-        if (this.spectrumState) {
-            this.spectrumState.textContent = state === 'idle'
-                ? 'Waiting for input'
-                : (state === 'recording' ? 'Capturing clip' : 'Live signal');
-        }
-    }
-
-    updateRecordAvailability() {
-        const canRecord = this.isRunning;
-        this.recordBtn.disabled = !canRecord;
-        this.recordBtn.setAttribute('aria-disabled', String(!canRecord));
-        this.recordBtn.title = canRecord
-            ? 'Capture a short clip and generate a sound portrait'
-            : 'Start listening first';
     }
 
     createFrequencyBars() {
@@ -286,7 +402,7 @@ class VoiceVisualizerApp {
         for (let i = 0; i < total; i++) {
             const bar = document.createElement('div');
             bar.className = 'freq-bar';
-            bar.style.height = '4px';
+            bar.style.height = '3px';
             this.freqBars.appendChild(bar);
         }
     }
@@ -297,51 +413,42 @@ class VoiceVisualizerApp {
         for (let i = 0; i < total; i++) {
             const idx = frequencies.length ? Math.floor((i / total) * frequencies.length) : 0;
             const value = frequencies[idx] || 0;
-            const height = 4 + value * 46;
+            const height = 3 + value * 34;
             bars[i].style.height = `${height}px`;
         }
     }
 
     updateStats({ volume, pitch, bpm }) {
-        const volumePercent = Math.round((volume || 0) * 100);
-        this.volumeValue.textContent = `${volumePercent}%`;
+        const levelPct = Math.round((volume || 0) * 100);
+        this.volumeValue.textContent = `${levelPct}%`;
+        this.setLevel(volume || 0);
 
         if (typeof pitch === 'number' && Number.isFinite(pitch) && pitch > 0) {
-            this.pitchValue.textContent = `${Math.round(pitch)} Hz`;
+            this.pitchValue.textContent = `${Math.round(pitch)}Hz`;
+            this.pitchValue.classList.remove('idle-value');
+        } else if (pitch && pitch !== 'Idle' && pitch !== '--') {
+            this.pitchValue.textContent = pitch;
             this.pitchValue.classList.remove('idle-value');
         } else {
-            const pitchLabel = pitch && pitch !== this.idlePlaceholder ? pitch : this.idlePlaceholder;
-            this.pitchValue.textContent = pitchLabel;
-            this.pitchValue.classList.toggle('idle-value', pitchLabel === this.idlePlaceholder);
+            this.pitchValue.textContent = 'Idle';
+            this.pitchValue.classList.add('idle-value');
         }
 
-        if (bpm && bpm > 0) {
+        if (bpm && bpm !== 'Idle' && bpm > 0) {
             this.bpmValue.textContent = String(bpm);
             this.bpmValue.classList.remove('idle-value');
         } else {
-            this.bpmValue.textContent = this.idlePlaceholder;
+            this.bpmValue.textContent = 'Idle';
             this.bpmValue.classList.add('idle-value');
-        }
-
-        const levelWidth = Math.min(100, Math.max(0, volumePercent));
-        this.levelBar.style.width = `${levelWidth}%`;
-        if (this.levelValue) {
-            this.levelValue.textContent = `${levelWidth}%`;
-        }
-        if (this.levelMeter) {
-            this.levelMeter.setAttribute('aria-valuenow', String(levelWidth));
         }
     }
 
-    triggerBeatIndicator(intensity = 0.5) {
+    triggerBeatIndicator() {
         this.beatIndicator.classList.add('active');
-        const scale = 1 + Math.min(0.8, intensity * 0.65);
-        this.beatIndicator.style.transform = `scale(${scale})`;
 
         clearTimeout(this.beatIndicatorTimer);
         this.beatIndicatorTimer = setTimeout(() => {
             this.beatIndicator.classList.remove('active');
-            this.beatIndicator.style.transform = 'scale(1)';
         }, 180);
     }
 
@@ -399,7 +506,7 @@ class VoiceVisualizerApp {
             ? Math.round(metrics.bpmSamples.reduce((a, b) => a + b, 0) / metrics.bpmSamples.length)
             : 0;
 
-        let dominantNote = 'Idle';
+        let dominantNote = '--';
         let maxCount = 0;
         Object.entries(metrics.noteCounts).forEach(([note, count]) => {
             if (count > maxCount) {
@@ -447,10 +554,10 @@ class VoiceVisualizerApp {
 
         try {
             await navigator.clipboard.writeText('I generated a sound portrait with Voice Visualizer.');
-                    this.showToast('Share caption copied. Send it with the downloaded portrait image.', 'success');
-                } catch (error) {
-                    this.showToast('Use the downloaded portrait file to share.', 'success');
-                }
+            this.showToast('Share caption copied. Send it with the downloaded portrait image.', 'success');
+        } catch (error) {
+            this.showToast('Share available via downloaded portrait file.', 'success');
+        }
     }
 
     renderLoop() {
