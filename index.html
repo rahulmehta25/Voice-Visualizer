@@ -18,6 +18,9 @@
     <div class="rec-rail hidden" id="recRail" aria-hidden="true">
         <div class="rec-rail-fill" id="recRailFill"></div>
     </div>
+    <div class="cue-rail hidden" id="cueRail" aria-hidden="true">
+        <div class="cue-rail-fill" id="cueRailFill"></div>
+    </div>
 
     <div class="stage">
         <header class="top-band">
@@ -98,11 +101,55 @@
         <section class="idle-hero" id="idleHero" aria-labelledby="idleTitle">
             <p class="idle-kicker" id="nowPlaying">Now playing: silence</p>
             <h2 id="idleTitle">The stage is dark.<br><em>Your voice is the light.</em></h2>
-            <p class="idle-lede">Hum, sing, or speak. The canvas listens on this device and paints what it hears. Nothing is uploaded.</p>
+            <p class="idle-lede">Play a house scene with no microphone. Or Listen, and the canvas paints what it hears on this device.</p>
+        </section>
+
+        <section class="cue-board" id="cueBoard" aria-label="Voice cue board">
+            <div class="cue-tabs" role="tablist" aria-label="Cue modes">
+                <button class="cue-tab is-active" id="tabScenes" data-cue="scenes" type="button" role="tab" aria-selected="true">Scenes</button>
+                <button class="cue-tab" id="tabSpeak" data-cue="speak" type="button" role="tab" aria-selected="false">Speak</button>
+                <button class="cue-tab" id="tabMorph" data-cue="morph" type="button" role="tab" aria-selected="false">Morph</button>
+                <button class="cue-pulse" id="sfxPulseBtn" type="button">Pulse</button>
+            </div>
+
+            <div class="cue-panel" id="panelScenes" data-panel="scenes" role="tabpanel">
+                <p class="cue-kicker">House reel. No microphone required.</p>
+                <div class="cue-scenes" id="sceneList"></div>
+            </div>
+
+            <div class="cue-panel hidden" id="panelSpeak" data-panel="speak" role="tabpanel">
+                <p class="cue-kicker">Give the house a line.</p>
+                <label class="sr-only" for="speakText">Line to speak</label>
+                <textarea id="speakText" rows="3" maxlength="500" placeholder="The house goes dark. Then one voice finds the light and refuses to leave."></textarea>
+                <div class="cue-row">
+                    <div class="voice-pills" id="speakVoices" aria-label="Speak voice"></div>
+                    <button class="cue-go" id="speakBtn" type="button">Generate</button>
+                </div>
+            </div>
+
+            <div class="cue-panel hidden" id="panelMorph" data-panel="morph" role="tabpanel">
+                <p class="cue-kicker">Leave a short mark. We recast it.</p>
+                <div class="voice-pills" id="morphVoices" aria-label="Morph voice"></div>
+                <div class="cue-row">
+                    <button class="cue-go" id="morphBtn" type="button">
+                        <span id="morphLabel">Record</span>
+                    </button>
+                    <span class="cue-note" id="morphNote">Three seconds. Then the cast changes.</span>
+                </div>
+            </div>
+
+            <details class="cue-key" id="cueKey">
+                <summary>Session key</summary>
+                <label class="key-field" for="elevenKeyInput">
+                    <span>ElevenLabs API key for this browser session</span>
+                    <input id="elevenKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="xi... (optional, session only)">
+                </label>
+                <p class="cue-note">Stored in sessionStorage. Never shipped in the page. Live Speak uses POST /api/tts. Live Morph uses POST /api/morph. You can also send this session key as x-elevenlabs-key.</p>
+            </details>
         </section>
 
         <footer class="dock">
-            <p class="idle-hint" id="idleHint">Press Listen or Space. Choose a scene with 1 to 4.</p>
+            <p class="idle-hint" id="idleHint">Cue Scenes, Speak, or Morph. Press Listen or Space for the mic. Visuals 1 to 4.</p>
 
             <div class="error-band hidden" id="micErrorBand" role="alert">
                 <p class="error-kicker">No input</p>
@@ -162,6 +209,7 @@
     <script src="audio.js"></script>
     <script src="visuals.js"></script>
     <script src="recorder.js"></script>
+    <script src="elevenlabs.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
