@@ -154,46 +154,46 @@ class Recorder {
         canvas.height = 1350;
         const ctx = canvas.getContext('2d');
 
-        const palette = payload.palette || ['#ff3d9a', '#9b5cff', '#f6eefe'];
+        const palette = payload.palette || ['#e23a8f', '#8a5cd6', '#f3eef7'];
         const frequencies = Array.isArray(payload.frequencyProfile) && payload.frequencyProfile.length
             ? payload.frequencyProfile
             : new Array(64).fill(0);
 
         const background = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-        background.addColorStop(0, '#050308');
-        background.addColorStop(0.5, '#0a0610');
-        background.addColorStop(1, '#07040c');
+        background.addColorStop(0, '#07060a');
+        background.addColorStop(0.5, '#0a0810');
+        background.addColorStop(1, '#07060a');
         ctx.fillStyle = background;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        for (let i = 0; i < 90; i++) {
+        for (let i = 0; i < 60; i++) {
             const x = Math.random() * canvas.width;
             const y = Math.random() * canvas.height;
-            const r = Math.random() * 1.6;
-            ctx.fillStyle = `rgba(246, 238, 254, ${Math.random() * 0.22})`;
+            const r = Math.random() * 1.2;
+            ctx.fillStyle = `rgba(243, 238, 247, ${Math.random() * 0.14})`;
             ctx.beginPath();
             ctx.arc(x, y, r, 0, Math.PI * 2);
             ctx.fill();
         }
 
         const glow = ctx.createRadialGradient(540, 520, 120, 540, 520, 520);
-        glow.addColorStop(0, 'rgba(255, 61, 154, 0.28)');
-        glow.addColorStop(0.55, 'rgba(155, 92, 255, 0.12)');
-        glow.addColorStop(1, 'rgba(255, 61, 154, 0)');
+        glow.addColorStop(0, 'rgba(226, 58, 143, 0.14)');
+        glow.addColorStop(0.55, 'rgba(138, 92, 214, 0.06)');
+        glow.addColorStop(1, 'rgba(226, 58, 143, 0)');
         ctx.fillStyle = glow;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        ctx.fillStyle = 'rgba(255, 61, 154, 0.85)';
-        ctx.font = '500 22px "IBM Plex Mono", monospace';
+        ctx.fillStyle = 'rgba(243, 238, 247, 0.48)';
+        ctx.font = '400 20px "IBM Plex Mono", monospace';
         ctx.textAlign = 'center';
         ctx.fillText('SIGNAL THEATRE', 540, 88);
 
-        ctx.fillStyle = '#f6eefe';
+        ctx.fillStyle = '#f3eef7';
         ctx.font = '400 64px "Instrument Serif", Georgia, serif';
         ctx.fillText('Sound Portrait', 540, 150);
 
-        ctx.font = '500 26px Sora, sans-serif';
-        ctx.fillStyle = 'rgba(246, 238, 254, 0.62)';
+        ctx.font = '400 24px Sora, sans-serif';
+        ctx.fillStyle = 'rgba(243, 238, 247, 0.55)';
         ctx.fillText(payload.modeLabel || 'Wave', 540, 196);
 
         const centerX = 540;
@@ -227,13 +227,13 @@ class Recorder {
         ctx.beginPath();
         ctx.arc(centerX, centerY, 114, 0, Math.PI * 2);
         const core = ctx.createRadialGradient(centerX, centerY, 10, centerX, centerY, 110);
-        core.addColorStop(0, 'rgba(246, 238, 254, 0.95)');
-        core.addColorStop(1, 'rgba(255, 61, 154, 0.18)');
+        core.addColorStop(0, 'rgba(243, 238, 247, 0.92)');
+        core.addColorStop(1, 'rgba(226, 58, 143, 0.1)');
         ctx.fillStyle = core;
         ctx.fill();
 
-        ctx.strokeStyle = 'rgba(255, 61, 154, 0.55)';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(226, 58, 143, 0.35)';
+        ctx.lineWidth = 1;
         ctx.stroke();
 
         const cards = [
@@ -254,25 +254,25 @@ class Recorder {
             const x = 150 + col * 390;
             const y = 780 + row * 140;
 
-            ctx.fillStyle = 'rgba(12, 6, 18, 0.82)';
-            ctx.strokeStyle = 'rgba(255, 61, 154, 0.28)';
+            ctx.fillStyle = 'rgba(7, 6, 10, 0.9)';
+            ctx.strokeStyle = 'rgba(243, 238, 247, 0.14)';
             ctx.lineWidth = 1;
-            this.roundRect(ctx, x, y, 330, 100, 24);
+            this.roundRect(ctx, x, y, 330, 100, 0);
             ctx.fill();
             ctx.stroke();
 
-            ctx.fillStyle = 'rgba(246, 238, 254, 0.55)';
+            ctx.fillStyle = 'rgba(243, 238, 247, 0.48)';
             ctx.fillText(card.label.toUpperCase(), x + 24, y + 38);
 
-            ctx.fillStyle = '#f6eefe';
-            ctx.font = '500 34px Sora, sans-serif';
+            ctx.fillStyle = '#f3eef7';
+            ctx.font = '400 34px "Instrument Serif", Georgia, serif';
             ctx.fillText(String(card.value), x + 24, y + 74);
-            ctx.font = '500 22px "IBM Plex Mono", monospace';
+            ctx.font = '400 20px "IBM Plex Mono", monospace';
         });
 
         ctx.textAlign = 'center';
-        ctx.fillStyle = 'rgba(246, 238, 254, 0.5)';
-        ctx.font = '400 22px Sora, sans-serif';
+        ctx.fillStyle = 'rgba(243, 238, 247, 0.42)';
+        ctx.font = '300 20px Sora, sans-serif';
         ctx.fillText(payload.timestampLabel || new Date().toLocaleString(), 540, 1260);
 
         const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));

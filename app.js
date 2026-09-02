@@ -24,10 +24,10 @@ class VoiceVisualizerApp {
         };
 
         this.modePalettes = {
-            waveform: ['#ff3d9a', '#9b5cff', '#f6eefe'],
-            radial: ['#ff3d9a', '#c45cff', '#ff8ec8'],
-            cloud: ['#ff3d9a', '#9b5cff', '#d8a6ff'],
-            aurora: ['#ff3d9a', '#7a3dff', '#ff6eb5']
+            waveform: ['#e23a8f', '#8a5cd6', '#f3eef7'],
+            radial: ['#e23a8f', '#9a6adf', '#f3eef7'],
+            cloud: ['#e23a8f', '#8a5cd6', '#d7c4f0'],
+            aurora: ['#e23a8f', '#7046b8', '#f3eef7']
         };
 
         this.canvas = document.getElementById('visualizer');
@@ -349,15 +349,12 @@ class VoiceVisualizerApp {
         }
     }
 
-    triggerBeatIndicator(intensity = 0.5) {
+    triggerBeatIndicator() {
         this.beatIndicator.classList.add('active');
-        const scale = 1 + Math.min(0.8, intensity * 0.65);
-        this.beatIndicator.style.transform = `scale(${scale})`;
 
         clearTimeout(this.beatIndicatorTimer);
         this.beatIndicatorTimer = setTimeout(() => {
             this.beatIndicator.classList.remove('active');
-            this.beatIndicator.style.transform = 'scale(1)';
         }, 180);
     }
 

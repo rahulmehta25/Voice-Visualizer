@@ -89,7 +89,7 @@ class VisualEngine {
                 y: Math.random(),
                 r: 0.4 + Math.random() * 1.4,
                 speed: 0.03 + Math.random() * 0.08,
-                alpha: 0.05 + Math.random() * 0.18
+                alpha: 0.03 + Math.random() * 0.1
             });
         }
     }
@@ -176,9 +176,9 @@ class VisualEngine {
             this.centerY,
             this.radius * 1.15
         );
-        const signalAlpha = this.isLive ? 0.1 + this.volume * 0.22 : 0.08 + Math.sin(this.time * 0.8) * 0.03;
-        glowA.addColorStop(0, `rgba(255, 61, 154, ${signalAlpha})`);
-        glowA.addColorStop(1, 'rgba(255, 61, 154, 0)');
+        const signalAlpha = this.isLive ? 0.045 + this.volume * 0.1 : 0.035 + Math.sin(this.time * 0.55) * 0.015;
+        glowA.addColorStop(0, `rgba(226, 58, 143, ${signalAlpha})`);
+        glowA.addColorStop(1, 'rgba(226, 58, 143, 0)');
         this.ctx.fillStyle = glowA;
         this.ctx.fillRect(0, 0, this.width, this.height);
 
@@ -190,8 +190,8 @@ class VisualEngine {
             this.centerY,
             this.radius
         );
-        glowB.addColorStop(0, `rgba(155, 92, 255, ${this.isLive ? 0.08 + this.mids * 0.16 : 0.06})`);
-        glowB.addColorStop(1, 'rgba(155, 92, 255, 0)');
+        glowB.addColorStop(0, `rgba(138, 92, 214, ${this.isLive ? 0.035 + this.mids * 0.08 : 0.028})`);
+        glowB.addColorStop(1, 'rgba(138, 92, 214, 0)');
         this.ctx.fillStyle = glowB;
         this.ctx.fillRect(0, 0, this.width, this.height);
     }
@@ -215,25 +215,25 @@ class VisualEngine {
     }
 
     renderIdleSignal() {
-        const breath = 0.55 + Math.sin(this.time * 0.9) * 0.45;
+        const breath = 0.62 + Math.sin(this.time * 0.55) * 0.38;
         const layers = [
-            { amp: 38 + breath * 22, alpha: 0.55, width: 2.2, phase: 0 },
-            { amp: 24 + breath * 14, alpha: 0.28, width: 1.4, phase: 1.1 },
-            { amp: 14 + breath * 10, alpha: 0.16, width: 1, phase: 2.2 }
+            { amp: 28 + breath * 14, alpha: 0.42, width: 1.35, phase: 0 },
+            { amp: 16 + breath * 10, alpha: 0.2, width: 1, phase: 1.2 },
+            { amp: 9 + breath * 7, alpha: 0.1, width: 0.8, phase: 2.1 }
         ];
 
         layers.forEach((layer, index) => {
             const gradient = this.ctx.createLinearGradient(0, 0, this.width, 0);
-            gradient.addColorStop(0, `rgba(155, 92, 255, ${layer.alpha * 0.35})`);
-            gradient.addColorStop(0.5, `rgba(255, 61, 154, ${layer.alpha})`);
-            gradient.addColorStop(1, `rgba(155, 92, 255, ${layer.alpha * 0.35})`);
+            gradient.addColorStop(0, `rgba(138, 92, 214, ${layer.alpha * 0.25})`);
+            gradient.addColorStop(0.5, `rgba(226, 58, 143, ${layer.alpha})`);
+            gradient.addColorStop(1, `rgba(138, 92, 214, ${layer.alpha * 0.25})`);
 
             this.ctx.beginPath();
             for (let x = 0; x <= this.width; x += 4) {
                 const t = x / this.width;
                 const y = this.centerY
-                    + Math.sin(t * Math.PI * 2 * 1.5 + this.time * 1.2 + layer.phase) * layer.amp
-                    + Math.sin(t * Math.PI * 6 + this.time * 0.55 + index) * (4 + breath * 3);
+                    + Math.sin(t * Math.PI * 2 * 1.35 + this.time * 0.85 + layer.phase) * layer.amp
+                    + Math.sin(t * Math.PI * 5 + this.time * 0.4 + index) * (2.5 + breath * 2);
 
                 if (x === 0) {
                     this.ctx.moveTo(x, y);
@@ -244,22 +244,15 @@ class VisualEngine {
 
             this.ctx.strokeStyle = gradient;
             this.ctx.lineWidth = layer.width;
-            this.ctx.shadowColor = 'rgba(255, 61, 154, 0.45)';
-            this.ctx.shadowBlur = 18 + breath * 10;
+            this.ctx.shadowColor = 'rgba(226, 58, 143, 0.18)';
+            this.ctx.shadowBlur = 8 + breath * 4;
             this.ctx.stroke();
             this.ctx.shadowBlur = 0;
         });
 
-        const ringPulse = 0.35 + breath * 0.4;
         this.ctx.beginPath();
-        this.ctx.arc(this.centerX, this.centerY, this.radius * (0.18 + breath * 0.03), 0, Math.PI * 2);
-        this.ctx.strokeStyle = `rgba(255, 61, 154, ${0.12 + ringPulse * 0.12})`;
-        this.ctx.lineWidth = 1.2;
-        this.ctx.stroke();
-
-        this.ctx.beginPath();
-        this.ctx.arc(this.centerX, this.centerY, 3 + breath * 2, 0, Math.PI * 2);
-        this.ctx.fillStyle = `rgba(255, 61, 154, ${0.35 + breath * 0.25})`;
+        this.ctx.arc(this.centerX, this.centerY, 2.2, 0, Math.PI * 2);
+        this.ctx.fillStyle = `rgba(226, 58, 143, ${0.28 + breath * 0.18})`;
         this.ctx.fill();
     }
 
@@ -303,9 +296,9 @@ class VisualEngine {
         const layers = [1, 0.72, 0.45];
         const phaseBase = this.time * 2.8;
 
-        for (let i = 0; i < 5; i++) {
-            const y = (this.height / 5) * i;
-            this.ctx.strokeStyle = `rgba(255, 61, 154, ${0.04 + this.volume * 0.05})`;
+        for (let i = 0; i < 4; i++) {
+            const y = (this.height / 4) * i;
+            this.ctx.strokeStyle = `rgba(243, 238, 247, ${0.03 + this.volume * 0.03})`;
             this.ctx.lineWidth = 1;
             this.ctx.beginPath();
             this.ctx.moveTo(0, y);
@@ -314,14 +307,14 @@ class VisualEngine {
         }
 
         layers.forEach((layer, index) => {
-            const amp = (55 + this.volume * 170) * layer;
-            const wobble = 10 + this.mids * 40;
+            const amp = (48 + this.volume * 140) * layer;
+            const wobble = 8 + this.mids * 28;
             const gradient = this.ctx.createLinearGradient(0, 0, this.width, 0);
-            const alpha = 0.9 - index * 0.22;
+            const alpha = 0.72 - index * 0.18;
 
-            gradient.addColorStop(0, `rgba(155, 92, 255, ${alpha})`);
-            gradient.addColorStop(0.5, `rgba(255, 61, 154, ${alpha})`);
-            gradient.addColorStop(1, `rgba(155, 92, 255, ${alpha})`);
+            gradient.addColorStop(0, `rgba(138, 92, 214, ${alpha * 0.55})`);
+            gradient.addColorStop(0.5, `rgba(226, 58, 143, ${alpha})`);
+            gradient.addColorStop(1, `rgba(138, 92, 214, ${alpha * 0.55})`);
 
             this.ctx.beginPath();
             for (let x = 0; x <= this.width; x += 3) {
@@ -337,9 +330,9 @@ class VisualEngine {
                 }
             }
             this.ctx.strokeStyle = gradient;
-            this.ctx.lineWidth = 2 + (layers.length - index);
-            this.ctx.shadowColor = 'rgba(255, 61, 154, 0.55)';
-            this.ctx.shadowBlur = 14 + this.volume * 25;
+            this.ctx.lineWidth = 1.2 + (layers.length - index) * 0.55;
+            this.ctx.shadowColor = 'rgba(226, 58, 143, 0.22)';
+            this.ctx.shadowBlur = 6 + this.volume * 10;
             this.ctx.stroke();
             this.ctx.shadowBlur = 0;
         });
@@ -349,15 +342,15 @@ class VisualEngine {
         for (let x = 0; x <= this.width; x += 5) {
             const waveIndex = Math.floor((x / this.width) * (waveform.length - 1));
             const signal = waveform[waveIndex] || 0;
-            const y = this.centerY + signal * (45 + this.volume * 110);
+            const y = this.centerY + signal * (38 + this.volume * 90);
             this.ctx.lineTo(x, y);
         }
         this.ctx.lineTo(this.width, this.height);
         this.ctx.lineTo(0, this.height);
         this.ctx.closePath();
         const fill = this.ctx.createLinearGradient(0, this.centerY, 0, this.height);
-        fill.addColorStop(0, `rgba(255, 61, 154, ${0.18 + this.volume * 0.2})`);
-        fill.addColorStop(1, 'rgba(5, 3, 8, 0)');
+        fill.addColorStop(0, `rgba(226, 58, 143, ${0.08 + this.volume * 0.12})`);
+        fill.addColorStop(1, 'rgba(7, 6, 10, 0)');
         this.ctx.fillStyle = fill;
         this.ctx.fill();
     }
@@ -410,18 +403,18 @@ class VisualEngine {
             }
         }
         this.ctx.closePath();
-        this.ctx.strokeStyle = `rgba(246, 238, 254, ${0.28 + this.volume * 0.5})`;
-        this.ctx.lineWidth = 2.5;
-        this.ctx.shadowColor = 'rgba(255, 61, 154, 0.8)';
-        this.ctx.shadowBlur = 20;
+            this.ctx.strokeStyle = `rgba(243, 238, 247, ${0.22 + this.volume * 0.35})`;
+        this.ctx.lineWidth = 1.5;
+        this.ctx.shadowColor = 'rgba(226, 58, 143, 0.28)';
+        this.ctx.shadowBlur = 8;
         this.ctx.stroke();
         this.ctx.shadowBlur = 0;
 
-        const pulseRadius = innerRadius + 20 + this.beatPulse * 80;
+        const pulseRadius = innerRadius + 20 + this.beatPulse * 60;
         this.ctx.beginPath();
         this.ctx.arc(0, 0, pulseRadius, 0, Math.PI * 2);
-        this.ctx.strokeStyle = `rgba(255, 61, 154, ${this.beatPulse * 0.75})`;
-        this.ctx.lineWidth = 3 + this.beatPulse * 6;
+        this.ctx.strokeStyle = `rgba(226, 58, 143, ${this.beatPulse * 0.45})`;
+        this.ctx.lineWidth = 1.5 + this.beatPulse * 2;
         this.ctx.stroke();
 
         this.ctx.restore();
@@ -503,8 +496,8 @@ class VisualEngine {
         }
 
         const core = this.ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius * 0.34);
-        core.addColorStop(0, `rgba(255, 61, 154, ${0.2 + this.volume * 0.28})`);
-        core.addColorStop(1, 'rgba(255, 61, 154, 0)');
+        core.addColorStop(0, `rgba(226, 58, 143, ${0.1 + this.volume * 0.14})`);
+        core.addColorStop(1, 'rgba(226, 58, 143, 0)');
         this.ctx.fillStyle = core;
         this.ctx.beginPath();
         this.ctx.arc(0, 0, this.radius * 0.34, 0, Math.PI * 2);
@@ -551,7 +544,7 @@ class VisualEngine {
             const freq = frequencies[i] || 0;
             const x = (i / frequencies.length) * this.width;
             const h = 30 + freq * this.height * 0.42;
-            this.ctx.fillStyle = `rgba(255, 61, 154, ${0.04 + freq * 0.12})`;
+            this.ctx.fillStyle = `rgba(226, 58, 143, ${0.025 + freq * 0.07})`;
             this.ctx.fillRect(x, this.height - h, this.width / frequencies.length + 1, h);
         }
 

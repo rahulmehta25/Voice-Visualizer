@@ -20,21 +20,14 @@
     </div>
 
     <div class="stage">
-        <header class="top-rail">
+        <header class="top-band">
             <div class="brand">
-                <span class="brand-mark" aria-hidden="true">
-                    <svg viewBox="0 0 32 32" fill="none">
-                        <path d="M4 16c2-6 4-6 6 0s4 6 6 0 4-6 6 0 4 6 6 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                    </svg>
-                </span>
-                <div class="brand-copy">
-                    <p class="kicker">Signal Theatre</p>
-                    <h1>Voice Visualizer</h1>
-                </div>
+                <p class="kicker">Signal Theatre</p>
+                <h1>Voice Visualizer</h1>
             </div>
 
             <div class="status-cluster">
-                <div class="status-pill" id="statusPill">
+                <div class="status-line" id="statusPill">
                     <span class="status-dot" aria-hidden="true"></span>
                     <span id="statusText">House dark</span>
                 </div>
@@ -49,12 +42,11 @@
                 </div>
                 <button class="beat-indicator" id="beatIndicator" type="button" aria-label="Beat pulse" tabindex="-1">
                     <span class="beat-core"></span>
-                    <span class="beat-ring"></span>
                 </button>
             </div>
         </header>
 
-        <nav class="scene-rail" aria-label="Visual scenes">
+        <nav class="scene-band" aria-label="Visual scenes">
             <button class="scene-btn active" data-mode="waveform" type="button">
                 <span class="scene-key">1</span>
                 <span class="scene-name">Wave</span>
@@ -101,10 +93,7 @@
 
         <footer class="dock">
             <button class="listen-control" id="startBtn" type="button">
-                <span class="listen-orb" aria-hidden="true">
-                    <span class="listen-ring"></span>
-                    <span class="listen-core"></span>
-                </span>
+                <span class="listen-mark" aria-hidden="true"></span>
                 <span class="listen-copy">
                     <span class="listen-label" id="startLabel">Listen</span>
                     <span class="listen-hint">Space</span>
@@ -112,24 +101,24 @@
             </button>
 
             <div class="dock-actions">
-                <button class="ghost-btn" id="recordBtn" type="button" disabled>
-                    <span class="ghost-label" id="recordLabel">Record</span>
-                    <span class="ghost-hint">R</span>
+                <button class="link-action" id="recordBtn" type="button" disabled>
+                    <span id="recordLabel">Record</span>
+                    <span class="link-hint">R</span>
                 </button>
-                <button class="ghost-btn" id="screenshotBtn" type="button">
-                    <span class="ghost-label">Frame</span>
-                    <span class="ghost-hint">S</span>
+                <button class="link-action" id="screenshotBtn" type="button">
+                    <span>Frame</span>
+                    <span class="link-hint">S</span>
                 </button>
             </div>
         </footer>
 
-        <div class="recording-chip glass-chip hidden" id="recordingIndicator">
+        <div class="recording-chip hidden" id="recordingIndicator">
             <span class="rec-dot" aria-hidden="true"></span>
             <span class="rec-word">REC</span>
             <span id="recTime">00:00</span>
         </div>
 
-        <div class="floor-spectrum" aria-hidden="true">
+        <div class="floor-band" aria-hidden="true">
             <div class="spectrum-meta">
                 <span class="meta-label">Spectrum</span>
                 <span class="meta-value" id="spectrumState">Waiting</span>
@@ -145,9 +134,9 @@
             <p>Your clip was captured. Download or share the generated image.</p>
             <img id="portraitPreview" alt="Generated sound portrait">
             <div class="portrait-actions">
-                <a id="portraitDownload" class="portrait-btn" download>Download</a>
-                <button id="portraitShare" class="portrait-btn" type="button">Share</button>
-                <button id="portraitClose" class="portrait-btn ghost" type="button">Close</button>
+                <a id="portraitDownload" class="portrait-primary" download>Download</a>
+                <button id="portraitShare" class="link-action" type="button">Share</button>
+                <button id="portraitClose" class="link-action" type="button">Close</button>
             </div>
         </div>
     </aside>
