@@ -113,6 +113,24 @@ a:focus-visible {
     transition: width 180ms linear;
 }
 
+.cue-rail {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    z-index: 24;
+    background: rgba(226, 58, 143, 0.16);
+    overflow: hidden;
+}
+
+.cue-rail-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--signal);
+    transition: width 80ms linear;
+}
+
 .stage {
     position: fixed;
     inset: 0;
@@ -133,7 +151,12 @@ a:focus-visible {
 .listen-hint,
 .link-hint,
 .scene-key,
-.rec-word {
+.rec-word,
+.cue-kicker,
+.cue-tab,
+.cue-pulse,
+.voice-pill,
+.cue-key summary {
     font-family: var(--type-mono);
     font-size: 0.64rem;
     letter-spacing: 0.18em;
@@ -303,6 +326,243 @@ body.is-recording .status-dot {
     font-size: 0.95rem;
     font-weight: 400;
     letter-spacing: 0.01em;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.cue-board {
+    position: absolute;
+    left: var(--rail);
+    bottom: calc(var(--rail) + 5.6rem);
+    width: min(22.5rem, calc(42vw - 2rem));
+    z-index: 12;
+}
+
+.cue-tabs {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid var(--hairline);
+}
+
+.cue-tab,
+.cue-pulse {
+    padding: 0.15rem 0;
+    color: var(--mute);
+    border-bottom: 1px solid transparent;
+    transition: color var(--rise) var(--ease), border-color var(--rise) var(--ease);
+}
+
+.cue-tab:hover,
+.cue-pulse:hover {
+    color: var(--ink);
+}
+
+.cue-tab.is-active {
+    color: var(--ink);
+    border-bottom-color: var(--signal);
+}
+
+.cue-pulse {
+    margin-left: auto;
+    color: var(--ink);
+}
+
+.cue-pulse.is-hot {
+    color: var(--signal);
+    border-bottom-color: var(--signal);
+}
+
+.cue-panel {
+    padding-top: 0.85rem;
+}
+
+.cue-kicker {
+    margin-bottom: 0.75rem;
+}
+
+.cue-scenes {
+    display: grid;
+    gap: 0.15rem;
+}
+
+.cue-scene {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.48rem 0;
+    border-bottom: 1px solid var(--hairline);
+    text-align: left;
+    color: var(--ink);
+    transition: opacity var(--rise) var(--ease), border-color var(--rise) var(--ease);
+}
+
+.cue-scene:hover {
+    border-bottom-color: var(--signal);
+}
+
+.cue-scene.is-playing {
+    border-bottom-color: var(--signal);
+}
+
+.cue-scene-copy {
+    display: grid;
+    gap: 0.18rem;
+    min-width: 0;
+}
+
+.cue-scene-name {
+    font-size: 0.98rem;
+    letter-spacing: 0.01em;
+}
+
+.cue-scene-line {
+    color: var(--mute);
+    font-size: 0.82rem;
+    font-weight: 300;
+    line-height: 1.4;
+}
+
+.cue-scene-mode {
+    font-family: var(--type-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--mute-soft);
+}
+
+#speakText {
+    width: 100%;
+    resize: none;
+    border: 0;
+    border-bottom: 1px solid var(--hairline);
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--type-display);
+    font-size: 1.15rem;
+    line-height: 1.4;
+    letter-spacing: -0.015em;
+    padding: 0.2rem 0 0.7rem;
+    outline: none;
+}
+
+#speakText:focus {
+    border-bottom-color: var(--signal);
+}
+
+#speakText::placeholder {
+    color: var(--mute-soft);
+}
+
+.cue-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    margin-top: 0.9rem;
+    flex-wrap: wrap;
+}
+
+.voice-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+}
+
+.voice-pill {
+    padding: 0.15rem 0;
+    color: var(--mute);
+    border-bottom: 1px solid transparent;
+}
+
+.voice-pill.is-active {
+    color: var(--ink);
+    border-bottom-color: var(--signal);
+}
+
+.cue-go {
+    font-family: var(--type-display);
+    font-size: 1.2rem;
+    letter-spacing: -0.015em;
+    padding: 0.1rem 0;
+    border-bottom: 1px solid var(--signal);
+    color: var(--ink);
+}
+
+.cue-go:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+}
+
+.cue-go.is-busy {
+    color: var(--signal);
+}
+
+.cue-note {
+    color: var(--mute-soft);
+    font-size: 0.8rem;
+    font-weight: 300;
+    line-height: 1.45;
+    max-width: 16rem;
+}
+
+.cue-key {
+    margin-top: 1rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--hairline);
+}
+
+.cue-key summary {
+    cursor: pointer;
+    list-style: none;
+    color: var(--mute);
+}
+
+.cue-key summary::-webkit-details-marker {
+    display: none;
+}
+
+.cue-key[open] summary {
+    color: var(--ink);
+}
+
+.key-field {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0.75rem 0 0.5rem;
+    color: var(--mute);
+    font-size: 0.8rem;
+    font-weight: 300;
+}
+
+#elevenKeyInput {
+    width: 100%;
+    border: 0;
+    border-bottom: 1px solid var(--hairline);
+    background: transparent;
+    color: var(--ink);
+    font-family: var(--type-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    padding: 0.35rem 0;
+    outline: none;
+}
+
+#elevenKeyInput:focus {
+    border-bottom-color: var(--signal);
 }
 
 .telemetry {
@@ -667,12 +927,15 @@ body.is-idle .freq-bar {
 
 .toast-container {
     position: fixed;
-    top: calc(var(--rail) + 0.25rem);
+    top: calc(var(--rail) + 5.6rem);
     right: var(--rail);
     z-index: 50;
     display: flex;
     flex-direction: column;
     gap: 0.45rem;
+    max-height: calc(100vh - 12rem);
+    overflow: hidden;
+    pointer-events: none;
 }
 
 .toast {
@@ -683,6 +946,7 @@ body.is-idle .freq-bar {
     font-size: 0.92rem;
     color: var(--ink);
     max-width: min(18rem, calc(100vw - 2rem));
+    pointer-events: auto;
     transition: opacity 220ms var(--ease), transform 220ms var(--ease);
 }
 
@@ -743,6 +1007,14 @@ body.is-idle .freq-bar {
         padding-top: 0.9rem;
         border-top: 1px solid var(--hairline);
         width: 100%;
+    }
+
+    .cue-board {
+        position: static;
+        width: 100%;
+        margin-top: 1.35rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--hairline);
     }
 
     .telemetry {
@@ -865,7 +1137,10 @@ body.is-idle .freq-bar {
     .toast,
     .level-bar,
     .freq-bar,
-    .beat-core {
+    .beat-core,
+    .cue-tab,
+    .cue-scene,
+    .cue-rail-fill {
         transition: none;
     }
 

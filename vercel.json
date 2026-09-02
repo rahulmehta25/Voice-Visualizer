@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/tts.js": { "maxDuration": 30 },
+    "api/morph.js": { "maxDuration": 30 },
+    "api/sfx.js": { "maxDuration": 20 }
+  }
+}
