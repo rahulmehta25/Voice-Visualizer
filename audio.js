@@ -37,8 +37,17 @@ class AudioEngine {
     }
     
     async init() {
+        this.initError = null;
+
         try {
-            // Request microphone access
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                this.initError = {
+                    reason: 'unsupported',
+                    message: 'This browser cannot access a microphone here.'
+                };
+                return false;
+            }
+
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     echoCancellation: false,
@@ -46,31 +55,43 @@ class AudioEngine {
                     autoGainControl: false
                 }
             });
-            
-            // Create audio context
+
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            
-            // Create analyser node
+
             this.analyser = this.audioContext.createAnalyser();
             this.analyser.fftSize = 2048;
             this.analyser.smoothingTimeConstant = 0.8;
-            
-            // Connect microphone
+
             this.microphone = this.audioContext.createMediaStreamSource(stream);
             this.microphone.connect(this.analyser);
-            
-            // Initialize data arrays
+
             const bufferLength = this.analyser.frequencyBinCount;
             this.dataArray = new Uint8Array(bufferLength);
             this.frequencyData = new Uint8Array(bufferLength);
-            
+
             this.isRunning = true;
             this.analyze();
-            
-            console.log('🎤 Audio Engine initialized');
+
+            console.log('Audio Engine initialized');
             return true;
         } catch (error) {
             console.error('Failed to initialize audio:', error);
+
+            let reason = 'unavailable';
+            if (error && (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError')) {
+                reason = 'denied';
+            } else if (error && (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError')) {
+                reason = 'nodevice';
+            } else if (error && error.name === 'NotReadableError') {
+                reason = 'busy';
+            } else if (error && error.name === 'SecurityError') {
+                reason = 'secure';
+            }
+
+            this.initError = {
+                reason,
+                message: error && error.message ? error.message : 'Microphone access failed.'
+            };
             return false;
         }
     }

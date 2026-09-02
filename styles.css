@@ -48,10 +48,16 @@ button {
     cursor: pointer;
 }
 
+button:focus,
+a:focus {
+    outline: none;
+}
+
 button:focus-visible,
 a:focus-visible {
-    outline: 1px solid var(--signal);
-    outline-offset: 4px;
+    outline: none;
+    border-bottom-color: var(--signal);
+    box-shadow: 0 1px 0 0 var(--signal);
 }
 
 .skip-link {
@@ -215,26 +221,62 @@ body.is-recording .status-dot {
 }
 
 .level-meter {
+    position: relative;
     width: 9.5rem;
+    height: 0.85rem;
+    display: flex;
+    align-items: center;
+    padding-inline: 0.28rem;
+}
+
+.level-meter::before {
+    content: '';
+    position: absolute;
+    left: 0.28rem;
+    right: 0.28rem;
     height: 1px;
     background: var(--hairline);
-    overflow: hidden;
 }
 
 .level-bar {
+    position: absolute;
+    left: 0.28rem;
     width: 0;
-    height: 100%;
+    max-width: calc(100% - 0.56rem);
+    height: 1px;
     background: var(--signal);
     transition: width 55ms linear;
 }
 
+.level-handle {
+    position: absolute;
+    left: 0.28rem;
+    top: 50%;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    border: 1px solid rgba(243, 238, 247, 0.7);
+    background: var(--signal);
+    box-shadow: 0 0 0 1px rgba(7, 6, 10, 0.85);
+    transform: translate(-50%, -50%);
+    transition: left 55ms linear;
+}
+
+.beat-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 2.4rem;
+}
+
 .beat-indicator {
-    width: 1.1rem;
-    height: 1.1rem;
+    width: 0.9rem;
+    height: 0.9rem;
     border-radius: 50%;
     position: relative;
     border: 1px solid var(--hairline);
-    cursor: default;
+    display: block;
 }
 
 .beat-core {
@@ -327,18 +369,18 @@ body.is-recording .status-dot {
 .idle-hero {
     position: absolute;
     left: 50%;
-    top: 45%;
+    top: 38%;
     width: min(40rem, calc(100vw - 3rem));
     text-align: center;
     opacity: 1;
     transform: translate(-50%, -50%);
     transition: opacity var(--rise) var(--ease), transform var(--rise) var(--ease);
+    pointer-events: none;
 }
 
 body.is-live .idle-hero {
     opacity: 0;
     transform: translate(-50%, calc(-50% - 14px));
-    pointer-events: none;
 }
 
 .idle-kicker {
@@ -361,16 +403,10 @@ body.is-live .idle-hero {
 
 .idle-lede {
     max-width: 26rem;
-    margin: 0 auto 1rem;
+    margin: 0 auto;
     color: var(--mute);
     font-size: 1.02rem;
     line-height: 1.6;
-    font-weight: 300;
-}
-
-.idle-hint {
-    color: var(--mute-soft);
-    font-size: 0.86rem;
     font-weight: 300;
 }
 
@@ -382,21 +418,64 @@ body.is-live .idle-hero {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.25rem;
+    gap: 0.85rem;
+    width: min(28rem, calc(100vw - 3rem));
+    text-align: center;
     transition: bottom var(--rise) var(--ease), transform var(--rise) var(--ease);
 }
 
 body.is-idle .dock {
-    bottom: 17%;
+    bottom: auto;
+    top: 64%;
+    transform: translate(-50%, 0);
+}
+
+.idle-hint {
+    color: var(--mute-soft);
+    font-size: 0.86rem;
+    font-weight: 300;
+    line-height: 1.45;
+    max-width: 22rem;
+}
+
+body.is-live .idle-hint,
+body.is-live .error-band {
+    display: none;
+}
+
+.error-band {
+    width: 100%;
+    max-width: 24rem;
+    padding: 0.85rem 0;
+    border-top: 1px solid rgba(224, 83, 106, 0.45);
+    border-bottom: 1px solid rgba(224, 83, 106, 0.45);
+}
+
+.error-kicker {
+    font-family: var(--type-mono);
+    font-size: 0.64rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--danger);
+    margin-bottom: 0.35rem;
+}
+
+.error-copy {
+    color: var(--mute);
+    font-size: 0.92rem;
+    line-height: 1.45;
+    font-weight: 300;
 }
 
 .listen-control {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.95rem;
-    padding: 0.95rem 1.5rem 0.95rem 1.05rem;
+    padding: 0.35rem 0.15rem 0.55rem;
     border-bottom: 1px solid var(--hairline);
-    transition: opacity var(--rise) var(--ease), transform var(--rise) var(--ease), border-color var(--rise) var(--ease);
+    background: transparent;
+    transition: opacity var(--rise) var(--ease), transform var(--rise) var(--ease), border-color var(--rise) var(--ease), box-shadow var(--rise) var(--ease);
 }
 
 .listen-control:hover {
@@ -407,26 +486,16 @@ body.is-idle .dock {
     border-bottom-color: var(--signal);
 }
 
-.listen-mark {
-    width: 0.55rem;
-    height: 0.55rem;
-    border-radius: 50%;
-    background: var(--signal);
-    opacity: 0.9;
-}
-
-.listen-control.is-live .listen-mark {
-    border-radius: 0.1rem;
-    width: 0.55rem;
-    height: 0.55rem;
-    background: var(--ink);
-    opacity: 0.85;
+.listen-control:focus-visible {
+    outline: none;
+    border-bottom-color: var(--signal);
+    box-shadow: 0 1px 0 0 var(--signal);
 }
 
 .listen-copy {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 0.2rem;
 }
 
@@ -441,17 +510,18 @@ body.is-idle .dock {
 .dock-actions {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 1.5rem;
-    opacity: 0;
-    transform: translateY(10px);
-    pointer-events: none;
-    transition: opacity var(--rise) var(--ease), transform var(--rise) var(--ease);
+    min-height: 1.5rem;
+}
+
+.dock-actions[hidden] {
+    display: none !important;
 }
 
 body.is-live .dock-actions {
     opacity: 1;
     transform: translateY(0);
-    pointer-events: auto;
 }
 
 .link-action {
@@ -473,9 +543,22 @@ body.is-live .dock-actions {
     border-bottom-color: var(--signal);
 }
 
+.link-action:focus-visible {
+    outline: none;
+    border-bottom-color: var(--signal);
+    box-shadow: 0 1px 0 0 var(--signal);
+}
+
 .link-action:disabled {
     opacity: 0.32;
     cursor: not-allowed;
+}
+
+.scene-btn:focus-visible {
+    outline: none;
+    color: var(--ink);
+    border-bottom-color: var(--signal);
+    box-shadow: none;
 }
 
 .link-action.recording {
@@ -620,9 +703,9 @@ body.is-idle .freq-bar {
 }
 
 .toast {
-    padding: 0.7rem 0;
+    padding: 0.75rem 0;
     border-bottom: 1px solid var(--hairline);
-    background: transparent;
+    background: rgba(7, 6, 10, 0.92);
     font-weight: 400;
     font-size: 0.92rem;
     color: var(--ink);
@@ -635,7 +718,8 @@ body.is-idle .freq-bar {
 }
 
 .toast.error {
-    border-bottom-color: rgba(224, 83, 106, 0.55);
+    border-bottom-color: rgba(224, 83, 106, 0.7);
+    color: #ffd0d6;
 }
 
 .hidden {
@@ -709,8 +793,9 @@ body.is-idle .freq-bar {
         top: auto;
         transform: none;
         width: 100%;
-        margin: 2.8rem 0 1.6rem;
+        margin: 2.8rem 0 1.2rem;
         text-align: left;
+        pointer-events: none;
     }
 
     body.is-live .idle-hero {
@@ -720,18 +805,34 @@ body.is-idle .freq-bar {
     .dock {
         position: relative;
         left: auto;
+        top: auto;
         bottom: auto;
         transform: none;
         align-items: flex-start;
-        margin: 1.6rem 0 1.3rem;
+        width: 100%;
+        text-align: left;
+        margin: 0 0 1.3rem;
     }
 
     body.is-idle .dock {
+        top: auto;
         bottom: auto;
+        transform: none;
     }
 
-    body.is-idle .dock-actions {
-        display: none;
+    .idle-hint,
+    .error-band,
+    .listen-copy {
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .listen-control {
+        justify-content: flex-start;
+    }
+
+    .dock-actions {
+        justify-content: flex-start;
     }
 
     .floor-band {

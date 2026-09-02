@@ -249,11 +249,6 @@ class VisualEngine {
             this.ctx.stroke();
             this.ctx.shadowBlur = 0;
         });
-
-        this.ctx.beginPath();
-        this.ctx.arc(this.centerX, this.centerY, 2.2, 0, Math.PI * 2);
-        this.ctx.fillStyle = `rgba(226, 58, 143, ${0.28 + breath * 0.18})`;
-        this.ctx.fill();
     }
 
     renderVignette(strength = 0.56) {

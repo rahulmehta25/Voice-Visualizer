@@ -37,6 +37,8 @@ class VoiceVisualizerApp {
         this.recordLabel = document.getElementById('recordLabel');
         this.screenshotBtn = document.getElementById('screenshotBtn');
         this.levelBar = document.getElementById('levelBar');
+        this.levelHandle = document.getElementById('levelHandle');
+        this.levelMeter = document.getElementById('levelMeter');
         this.levelValue = document.getElementById('levelValue');
         this.beatIndicator = document.getElementById('beatIndicator');
         this.pitchValue = document.getElementById('pitchValue');
@@ -50,6 +52,11 @@ class VoiceVisualizerApp {
         this.recRail = document.getElementById('recRail');
         this.recRailFill = document.getElementById('recRailFill');
         this.statusText = document.getElementById('statusText');
+        this.nowPlaying = document.getElementById('nowPlaying');
+        this.idleHint = document.getElementById('idleHint');
+        this.micErrorBand = document.getElementById('micErrorBand');
+        this.micErrorCopy = document.getElementById('micErrorCopy');
+        this.dockActions = document.getElementById('dockActions');
 
         this.portraitPanel = document.getElementById('portraitPanel');
         this.portraitPreview = document.getElementById('portraitPreview');
@@ -68,26 +75,96 @@ class VoiceVisualizerApp {
         this.setupEventListeners();
         this.setupRecorderCallbacks();
         this.modeValue.textContent = this.modeLabels[this.currentMode];
+        this.setLevel(0);
         this.setStageState('idle');
 
         this.renderLoop();
     }
 
     setStageState(state) {
-        document.body.classList.toggle('is-idle', state === 'idle');
+        document.body.classList.toggle('is-idle', state === 'idle' || state === 'error');
         document.body.classList.toggle('is-live', state === 'live' || state === 'recording');
         document.body.classList.toggle('is-recording', state === 'recording');
+        document.body.classList.toggle('has-mic-error', state === 'error');
+
+        const liveActions = state === 'live' || state === 'recording';
+        this.setDockActionsVisible(liveActions);
 
         if (state === 'idle') {
             this.statusText.textContent = 'House dark';
             this.spectrumState.textContent = 'Waiting';
+            if (this.nowPlaying) {
+                this.nowPlaying.textContent = 'Now playing: silence';
+            }
+            if (this.idleHint) {
+                this.idleHint.hidden = false;
+            }
+        } else if (state === 'error') {
+            this.statusText.textContent = 'No input';
+            this.spectrumState.textContent = 'Unavailable';
+            if (this.nowPlaying) {
+                this.nowPlaying.textContent = 'Now playing: no input';
+            }
+            if (this.idleHint) {
+                this.idleHint.hidden = true;
+            }
         } else if (state === 'live') {
             this.statusText.textContent = 'Listening';
             this.spectrumState.textContent = 'Live';
+            this.clearMicError();
         } else if (state === 'recording') {
             this.statusText.textContent = 'Recording';
             this.spectrumState.textContent = 'Capture';
         }
+    }
+
+    setDockActionsVisible(visible) {
+        if (!this.dockActions) {
+            return;
+        }
+
+        this.dockActions.hidden = !visible;
+        [this.recordBtn, this.screenshotBtn].forEach((button) => {
+            if (!button) {
+                return;
+            }
+            button.tabIndex = visible ? 0 : -1;
+            if (!visible) {
+                button.setAttribute('aria-hidden', 'true');
+            } else {
+                button.removeAttribute('aria-hidden');
+            }
+        });
+    }
+
+    clearMicError() {
+        if (this.micErrorBand) {
+            this.micErrorBand.classList.add('hidden');
+        }
+        document.body.classList.remove('has-mic-error');
+    }
+
+    showMicError(reason = 'unavailable') {
+        const copy = {
+            denied: 'Microphone permission is needed to listen. Allow access, then try Listen again.',
+            nodevice: 'No input device was found on this machine.',
+            busy: 'The microphone is unavailable right now. Close other apps using it, then try again.',
+            secure: 'Microphone access needs a secure context (localhost or HTTPS).',
+            unsupported: 'This browser cannot access a microphone here.',
+            unavailable: 'Microphone access failed. Check permission and input device.'
+        };
+
+        if (this.micErrorCopy) {
+            this.micErrorCopy.textContent = copy[reason] || copy.unavailable;
+        }
+        if (this.micErrorBand) {
+            this.micErrorBand.classList.remove('hidden');
+        }
+
+        this.setLevel(0);
+        this.updateStats({ volume: 0, pitch: 'Idle', bpm: 'Idle' });
+        this.updateFrequencyBars([]);
+        this.setStageState('error');
     }
 
     setupEventListeners() {
@@ -149,12 +226,20 @@ class VoiceVisualizerApp {
 
             if (key === 'r') {
                 event.preventDefault();
+                if (!this.isRunning) {
+                    this.showToast('Start listening before recording a portrait.', 'error');
+                    return;
+                }
                 this.recordBtn.click();
                 return;
             }
 
             if (key === 's' && !event.metaKey && !event.ctrlKey) {
                 event.preventDefault();
+                if (!this.isRunning) {
+                    this.showToast('Start listening before saving a frame.', 'error');
+                    return;
+                }
                 this.screenshotBtn.click();
                 return;
             }
@@ -241,17 +326,19 @@ class VoiceVisualizerApp {
 
     async toggleAudio() {
         if (!this.isRunning) {
+            this.clearMicError();
             this.audioEngine = new AudioEngine();
             const ok = await this.audioEngine.init();
             if (!ok) {
+                const reason = this.audioEngine?.initError?.reason || 'unavailable';
                 this.audioEngine = null;
-                this.showToast('Microphone access was denied.', 'error');
+                this.showMicError(reason);
                 return;
             }
 
             this.audioEngine.setSensitivity(58);
-            this.audioEngine.onBeat = (intensity) => {
-                this.triggerBeatIndicator(intensity);
+            this.audioEngine.onBeat = () => {
+                this.triggerBeatIndicator();
             };
 
             this.isRunning = true;
@@ -278,12 +365,24 @@ class VoiceVisualizerApp {
         this.startBtn.classList.remove('is-live');
         this.startLabel.textContent = 'Listen';
         this.recordBtn.disabled = true;
+        this.clearMicError();
         this.setStageState('idle');
 
         this.updateStats({ volume: 0, pitch: 'Idle', bpm: 'Idle' });
         this.updateFrequencyBars([]);
-        this.levelBar.style.width = '0%';
-        this.levelValue.textContent = '0%';
+        this.setLevel(0);
+    }
+
+    setLevel(volume) {
+        const levelPct = Math.min(100, Math.max(0, Math.round((volume || 0) * 100)));
+        this.levelValue.textContent = `${levelPct}%`;
+        this.levelBar.style.width = `calc((100% - 0.56rem) * ${levelPct / 100})`;
+        if (this.levelHandle) {
+            this.levelHandle.style.left = `calc(0.28rem + (100% - 0.56rem) * ${levelPct / 100})`;
+        }
+        if (this.levelMeter) {
+            this.levelMeter.setAttribute('aria-valuenow', String(levelPct));
+        }
     }
 
     setMode(mode) {
@@ -326,8 +425,7 @@ class VoiceVisualizerApp {
     updateStats({ volume, pitch, bpm }) {
         const levelPct = Math.round((volume || 0) * 100);
         this.volumeValue.textContent = `${levelPct}%`;
-        this.levelValue.textContent = `${levelPct}%`;
-        this.levelBar.style.width = `${Math.min(100, Math.max(0, levelPct))}%`;
+        this.setLevel(volume || 0);
 
         if (typeof pitch === 'number' && Number.isFinite(pitch) && pitch > 0) {
             this.pitchValue.textContent = `${Math.round(pitch)}Hz`;
