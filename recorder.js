@@ -232,11 +232,11 @@ class Recorder {
         ctx.stroke();
 
         const cards = [
-            { label: 'BPM', value: payload.bpm || '--' },
+            { label: 'BPM', value: payload.bpm || 'Idle' },
             { label: 'Peak', value: `${Math.round((payload.peakVolume || 0) * 100)}%` },
             { label: 'Avg Energy', value: `${Math.round((payload.averageVolume || 0) * 100)}%` },
             { label: 'Beats', value: payload.beatCount ?? 0 },
-            { label: 'Top Note', value: payload.dominantNote || '--' },
+            { label: 'Top Note', value: payload.dominantNote || 'Idle' },
             { label: 'Duration', value: payload.durationLabel || '00:00' }
         ];
 

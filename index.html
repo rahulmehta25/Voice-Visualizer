@@ -3,101 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Visualizer | Immersive Sound Portrait Studio</title>
+    <meta name="description" content="Voice Visualizer is a live sound portrait studio. Listen, switch visual modes, and capture a shareable portrait from your voice.">
+    <title>Voice Visualizer | Sound Portrait Studio</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="is-idle">
     <canvas id="visualizer"></canvas>
+    <div class="studio-frame" aria-hidden="true">
+        <span class="frame-corner tl"></span>
+        <span class="frame-corner tr"></span>
+        <span class="frame-corner bl"></span>
+        <span class="frame-corner br"></span>
+    </div>
 
     <div class="overlay">
         <header class="topbar glass">
             <div class="brand">
-                <span class="brand-dot"></span>
-                <h1>Voice <span>Visualizer</span></h1>
-            </div>
-            <div class="top-right">
-                <div class="level-meter">
-                    <div class="level-bar" id="levelBar"></div>
+                <span class="brand-mark" aria-hidden="true">
+                    <span class="brand-dot"></span>
+                </span>
+                <div class="brand-copy">
+                    <p class="brand-kicker">Sound portrait studio</p>
+                    <h1>Voice <span>Visualizer</span></h1>
                 </div>
-                <button class="beat-indicator" id="beatIndicator" aria-label="Beat Indicator">
-                    <span class="beat-core"></span>
-                    <span class="beat-ring"></span>
-                </button>
+            </div>
+            <div class="status-cluster">
+                <div class="status-pill" id="statusPill" aria-live="polite">
+                    <span class="status-dot"></span>
+                    <span id="statusText">Idle</span>
+                </div>
+                <div class="meter-block">
+                    <div class="meter-copy">
+                        <span class="meter-label">Input</span>
+                        <span class="meter-value" id="levelValue">0%</span>
+                    </div>
+                    <div class="level-meter" role="meter" aria-label="Input level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="levelMeter">
+                        <div class="level-bar" id="levelBar"></div>
+                    </div>
+                </div>
+                <div class="beat-block">
+                    <button class="beat-indicator" id="beatIndicator" type="button" aria-label="Beat pulse" tabindex="-1">
+                        <span class="beat-core"></span>
+                        <span class="beat-ring"></span>
+                    </button>
+                    <span class="meter-label">Beat</span>
+                </div>
             </div>
         </header>
 
-        <nav class="mode-selector glass" aria-label="Visualization Mode">
-            <button class="mode-btn active" data-mode="waveform">
-                <span class="mode-icon">〰️</span>
-                <span>Waveform</span>
+        <nav class="mode-selector glass" aria-label="Visualization mode">
+            <button class="mode-btn active" data-mode="waveform" type="button" aria-pressed="true">
+                <span class="mode-k">1</span>
+                <span class="mode-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M2 12h3l2-6 3 12 3-9 2 3h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span class="mode-copy">
+                    <span class="mode-name">Waveform</span>
+                    <span class="mode-desc">Flowing signal</span>
+                </span>
             </button>
-            <button class="mode-btn" data-mode="radial">
-                <span class="mode-icon">⭕</span>
-                <span>Radial</span>
+            <button class="mode-btn" data-mode="radial" type="button" aria-pressed="false">
+                <span class="mode-k">2</span>
+                <span class="mode-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span class="mode-copy">
+                    <span class="mode-name">Radial</span>
+                    <span class="mode-desc">Circular spectrum</span>
+                </span>
             </button>
-            <button class="mode-btn" data-mode="cloud">
-                <span class="mode-icon">🧊</span>
-                <span>3D Cloud</span>
+            <button class="mode-btn" data-mode="cloud" type="button" aria-pressed="false">
+                <span class="mode-k">3</span>
+                <span class="mode-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="8" cy="13" r="2" stroke="currentColor" stroke-width="1.6"/>
+                        <circle cx="14.5" cy="8.5" r="1.6" stroke="currentColor" stroke-width="1.6"/>
+                        <circle cx="16" cy="15.5" r="2.2" stroke="currentColor" stroke-width="1.6"/>
+                        <path d="M9.6 11.8l3.4-2.2M14.8 10.2l.7 3.2M10 14.2l3.8 1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span class="mode-copy">
+                    <span class="mode-name">3D Cloud</span>
+                    <span class="mode-desc">Particle field</span>
+                </span>
             </button>
-            <button class="mode-btn" data-mode="aurora">
-                <span class="mode-icon">🌌</span>
-                <span>Northern Lights</span>
+            <button class="mode-btn" data-mode="aurora" type="button" aria-pressed="false">
+                <span class="mode-k">4</span>
+                <span class="mode-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M3 17c2.2-4 4.2-6.2 6.2-6.2 2.2 0 2.6 4.4 5 4.4 2.2 0 3.4-3.6 6.8-7.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                        <path d="M4 20c2.6-3.2 4.4-4.6 6.4-4.6 2.4 0 2.8 3.2 5.2 3.2 2 0 3.2-2.2 5.4-4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".7"/>
+                    </svg>
+                </span>
+                <span class="mode-copy">
+                    <span class="mode-name">Aurora</span>
+                    <span class="mode-desc">Northern lights</span>
+                </span>
             </button>
         </nav>
 
-        <section class="hud glass">
-            <div class="hud-stat">
+        <section class="hud glass" aria-label="Live audio stats">
+            <div class="hud-stat" data-stat="pitch">
                 <span class="label">Pitch</span>
-                <span class="value" id="pitchValue">--</span>
+                <span class="value idle-value" id="pitchValue">Idle</span>
             </div>
-            <div class="hud-stat">
+            <div class="hud-stat" data-stat="volume">
                 <span class="label">Volume</span>
                 <span class="value" id="volumeValue">0%</span>
             </div>
-            <div class="hud-stat">
-                <span class="label">BPM</span>
-                <span class="value" id="bpmValue">--</span>
+            <div class="hud-stat" data-stat="bpm">
+                <span class="label">Tempo</span>
+                <span class="value idle-value" id="bpmValue">Idle</span>
             </div>
-            <div class="hud-stat">
+            <div class="hud-stat" data-stat="mode">
                 <span class="label">Mode</span>
                 <span class="value" id="modeValue">Waveform</span>
             </div>
         </section>
 
-        <div class="controls">
-            <button class="primary-btn" id="startBtn">
-                <span class="icon">🎤</span>
-                <span class="text">Start Mic</span>
+        <section class="idle-stage" id="idleStage">
+            <div class="idle-card glass">
+                <p class="idle-kicker">Ready when you are</p>
+                <h2>Turn your voice into a live portrait</h2>
+                <p class="idle-body">Start listening, then hum, sing, or speak. Switch visual modes and capture a clip when the picture feels right.</p>
+                <div class="idle-actions">
+                    <button class="primary-btn" id="idleStartBtn" type="button">
+                        <span class="icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none">
+                                <rect x="9" y="3.5" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                                <path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v3.5M8.5 20.5h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                            </svg>
+                        </span>
+                        <span class="text">Start listening</span>
+                    </button>
+                    <p class="idle-hint">Browser will ask for microphone access. Nothing is uploaded.</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="controls glass" role="toolbar" aria-label="Session controls">
+            <button class="primary-btn" id="startBtn" type="button">
+                <span class="icon" aria-hidden="true">
+                    <svg class="icon-mic" viewBox="0 0 24 24" fill="none">
+                        <rect x="9" y="3.5" width="6" height="11" rx="3" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v3.5M8.5 20.5h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    </svg>
+                </span>
+                <span class="btn-copy">
+                    <span class="text">Start listening</span>
+                    <span class="btn-hint">Space</span>
+                </span>
             </button>
-            <button class="secondary-btn" id="recordBtn">
-                <span class="icon">⏺</span>
-                <span class="text">Record Clip + Portrait</span>
+            <button class="secondary-btn" id="recordBtn" type="button" disabled aria-disabled="true" title="Start listening first">
+                <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="7.2" stroke="currentColor" stroke-width="1.8"/>
+                        <circle cx="12" cy="12" r="3.4" fill="currentColor"/>
+                    </svg>
+                </span>
+                <span class="btn-copy">
+                    <span class="text">Record portrait</span>
+                    <span class="btn-hint">R</span>
+                </span>
             </button>
-            <button class="secondary-btn" id="screenshotBtn">
-                <span class="icon">📷</span>
-                <span class="text">Snapshot</span>
+            <button class="secondary-btn" id="screenshotBtn" type="button">
+                <span class="icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                        <rect x="3.5" y="6.5" width="17" height="13" rx="2.4" stroke="currentColor" stroke-width="1.8"/>
+                        <circle cx="12" cy="13" r="3.2" stroke="currentColor" stroke-width="1.8"/>
+                        <path d="M8.2 6.5l1.1-2h5.4l1.1 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+                <span class="btn-copy">
+                    <span class="text">Save frame</span>
+                    <span class="btn-hint">PNG</span>
+                </span>
             </button>
         </div>
 
-        <div class="recording-strip glass hidden" id="recordingIndicator">
-            <span class="rec-dot"></span>
-            <span>REC</span>
-            <span id="recTime">00:00</span>
-        </div>
-
-        <div class="frequency-mini glass" id="freqBars"></div>
+        <section class="spectrum-tray glass" aria-label="Frequency spectrum">
+            <div class="spectrum-head">
+                <span class="spectrum-title">Spectrum</span>
+                <span class="spectrum-state" id="spectrumState">Waiting for input</span>
+            </div>
+            <div class="frequency-mini" id="freqBars"></div>
+        </section>
     </div>
 
-    <aside class="portrait-panel hidden" id="portraitPanel" aria-live="polite">
+    <div class="recording-strip glass hidden" id="recordingIndicator">
+        <span class="rec-dot"></span>
+        <span class="rec-label">Recording</span>
+        <span id="recTime">00:00</span>
+        <span class="rec-cap">Auto-stops at 9s</span>
+    </div>
+
+    <aside class="portrait-panel hidden" id="portraitPanel" aria-live="polite" role="dialog" aria-modal="true" aria-labelledby="portraitTitle">
         <div class="portrait-card">
-            <h2>Sound Portrait Ready</h2>
-            <p>Your clip was captured. Share this generated image.</p>
+            <p class="portrait-kicker">Export ready</p>
+            <h2 id="portraitTitle">Sound portrait ready</h2>
+            <p>Your clip was captured. Download or share the generated image.</p>
             <img id="portraitPreview" alt="Generated sound portrait">
             <div class="portrait-actions">
                 <a id="portraitDownload" class="portrait-btn" download>Download</a>
-                <button id="portraitShare" class="portrait-btn">Share</button>
-                <button id="portraitClose" class="portrait-btn ghost">Close</button>
+                <button id="portraitShare" class="portrait-btn" type="button">Share</button>
+                <button id="portraitClose" class="portrait-btn ghost" type="button">Close</button>
             </div>
         </div>
     </aside>

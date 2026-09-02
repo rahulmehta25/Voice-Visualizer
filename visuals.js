@@ -107,6 +107,7 @@ class VisualEngine {
 
         this.ctx.clearRect(0, 0, this.width, this.height);
         this.renderBackdrop();
+        this.renderIdleAccent();
 
         if (this.transition > 0 && this.previousMode) {
             this.ctx.save();
@@ -152,6 +153,37 @@ class VisualEngine {
         glow.addColorStop(1, 'rgba(87, 245, 255, 0)');
         this.ctx.fillStyle = glow;
         this.ctx.fillRect(0, 0, this.width, this.height);
+    }
+
+    renderIdleAccent() {
+        const isIdle = this.volume < 0.02 && !this.frequencies.some((value) => value > 0.04);
+        if (!isIdle) {
+            return;
+        }
+
+        const breath = (Math.sin(this.time * 1.15) + 1) * 0.5;
+        const rings = 3;
+
+        this.ctx.save();
+        this.ctx.translate(this.centerX, this.centerY);
+
+        for (let i = 0; i < rings; i++) {
+            const radius = this.radius * (0.16 + i * 0.09 + breath * 0.02);
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            this.ctx.strokeStyle = `rgba(140, 210, 255, ${0.16 - i * 0.04})`;
+            this.ctx.lineWidth = 1.2;
+            this.ctx.stroke();
+        }
+
+        const core = this.ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius * 0.18);
+        core.addColorStop(0, `rgba(87, 245, 255, ${0.08 + breath * 0.08})`);
+        core.addColorStop(1, 'rgba(87, 245, 255, 0)');
+        this.ctx.fillStyle = core;
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, this.radius * 0.18, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
     }
 
     renderVignette() {
