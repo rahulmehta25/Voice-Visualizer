@@ -718,9 +718,20 @@ body.is-idle .freq-bar {
 }
 
 @media (max-width: 900px) {
+    body {
+        overflow-x: hidden;
+        overflow-y: auto;
+    }
+
     .overlay {
+        position: absolute;
+        inset: 0 auto auto 0;
+        width: 100%;
+        min-height: 100%;
+        height: auto;
         padding: 14px;
         gap: 8px;
+        grid-template-rows: auto auto auto auto auto auto;
     }
 
     .topbar {
@@ -746,6 +757,28 @@ body.is-idle .freq-bar {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    .idle-stage {
+        width: min(520px, calc(100vw - 28px));
+        align-self: stretch;
+    }
+
+    .idle-card {
+        padding: 18px 16px 16px;
+    }
+
+    .idle-card h2 {
+        font-size: 1.08rem;
+    }
+
+    .idle-body {
+        font-size: 0.95rem;
+        margin-bottom: 14px;
+    }
+
+    body.is-idle .controls #startBtn {
+        display: none;
+    }
+
     .controls {
         width: 100%;
     }
@@ -756,8 +789,13 @@ body.is-idle .freq-bar {
         justify-content: center;
     }
 
+    .spectrum-tray {
+        width: calc(100vw - 28px);
+    }
+
     .frequency-mini {
         grid-template-columns: repeat(32, 1fr);
+        min-height: 36px;
     }
 
     .recording-strip {
@@ -777,8 +815,9 @@ body.is-idle .freq-bar {
         display: none;
     }
 
-    .idle-card {
-        padding: 20px 16px 18px;
+    .mode-btn {
+        min-height: 52px;
+        padding: 7px 8px;
     }
 
     .brand h1 {
