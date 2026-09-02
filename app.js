@@ -37,7 +37,6 @@ class VoiceVisualizerApp {
         this.recordLabel = document.getElementById('recordLabel');
         this.screenshotBtn = document.getElementById('screenshotBtn');
         this.levelBar = document.getElementById('levelBar');
-        this.levelHandle = document.getElementById('levelHandle');
         this.levelMeter = document.getElementById('levelMeter');
         this.levelValue = document.getElementById('levelValue');
         this.beatIndicator = document.getElementById('beatIndicator');
@@ -376,10 +375,7 @@ class VoiceVisualizerApp {
     setLevel(volume) {
         const levelPct = Math.min(100, Math.max(0, Math.round((volume || 0) * 100)));
         this.levelValue.textContent = `${levelPct}%`;
-        this.levelBar.style.width = `calc((100% - 0.56rem) * ${levelPct / 100})`;
-        if (this.levelHandle) {
-            this.levelHandle.style.left = `calc(0.28rem + (100% - 0.56rem) * ${levelPct / 100})`;
-        }
+        this.levelBar.style.width = `${levelPct}%`;
         if (this.levelMeter) {
             this.levelMeter.setAttribute('aria-valuenow', String(levelPct));
         }

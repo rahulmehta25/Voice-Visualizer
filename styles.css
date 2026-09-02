@@ -221,45 +221,18 @@ body.is-recording .status-dot {
 }
 
 .level-meter {
-    position: relative;
     width: 9.5rem;
-    height: 0.85rem;
-    display: flex;
-    align-items: center;
-    padding-inline: 0.28rem;
-}
-
-.level-meter::before {
-    content: '';
-    position: absolute;
-    left: 0.28rem;
-    right: 0.28rem;
-    height: 1px;
+    height: 2px;
     background: var(--hairline);
+    overflow: hidden;
+    pointer-events: none;
 }
 
 .level-bar {
-    position: absolute;
-    left: 0.28rem;
     width: 0;
-    max-width: calc(100% - 0.56rem);
-    height: 1px;
+    height: 100%;
     background: var(--signal);
     transition: width 55ms linear;
-}
-
-.level-handle {
-    position: absolute;
-    left: 0.28rem;
-    top: 50%;
-    width: 0.55rem;
-    height: 0.55rem;
-    border-radius: 50%;
-    border: 1px solid rgba(243, 238, 247, 0.7);
-    background: var(--signal);
-    box-shadow: 0 0 0 1px rgba(7, 6, 10, 0.85);
-    transform: translate(-50%, -50%);
-    transition: left 55ms linear;
 }
 
 .beat-block {
