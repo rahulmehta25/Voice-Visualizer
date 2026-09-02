@@ -7,11 +7,24 @@ class AudioEngine {
     constructor() {
         this.audioContext = null;
         this.analyser = null;
+        this.bus = null;
+        this.hear = null;
         this.microphone = null;
+        this.micStream = null;
+        this.micActive = false;
         this.dataArray = null;
         this.frequencyData = null;
         this.isRunning = false;
         this.sensitivity = 1.0;
+
+        this.mediaEl = null;
+        this.mediaSource = null;
+        this.bufferSource = null;
+        this.overlaySources = [];
+        this.objectUrls = [];
+        this.bufferCache = new Map();
+        this.exclusivePlaying = false;
+        this.initError = null;
         
         // Analysis results
         this.volume = 0;
@@ -34,20 +47,117 @@ class AudioEngine {
         // Callbacks
         this.onBeat = null;
         this.onPitchChange = null;
+        this.onPlaybackStart = null;
+        this.onPlaybackEnd = null;
+        this.onPlaybackTime = null;
     }
-    
+
+    async ensureEngine() {
+        if (this.audioContext && this.audioContext.state !== 'closed') {
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+            }
+            return true;
+        }
+
+        const Context = window.AudioContext || window.webkitAudioContext;
+        this.audioContext = new Context();
+
+        this.analyser = this.audioContext.createAnalyser();
+        this.analyser.fftSize = 2048;
+        this.analyser.smoothingTimeConstant = 0.8;
+
+        this.bus = this.audioContext.createGain();
+        this.bus.gain.value = 1;
+        this.bus.connect(this.analyser);
+
+        this.hear = this.audioContext.createGain();
+        this.hear.gain.value = 1;
+        this.hear.connect(this.audioContext.destination);
+
+        const bufferLength = this.analyser.frequencyBinCount;
+        this.dataArray = new Uint8Array(bufferLength);
+        this.frequencyData = new Uint8Array(bufferLength);
+
+        this.isRunning = true;
+        this.analyze();
+
+        if (this.audioContext.state === 'suspended') {
+            await this.audioContext.resume();
+        }
+        return true;
+    }
+
+    async unlockPlayback() {
+        await this.ensureEngine();
+        if (this.audioContext && this.audioContext.state === 'suspended') {
+            await this.audioContext.resume();
+        }
+    }
+
+    connectToAnalyser(node, { hear = false } = {}) {
+        node.connect(this.bus);
+        if (hear) {
+            node.connect(this.hear);
+        }
+    }
+
     async init() {
         this.initError = null;
+        try {
+            await this.ensureEngine();
+            const ok = await this.startMicrophone();
+            if (ok) {
+                console.log('Audio Engine initialized');
+            }
+            return ok;
+        } catch (error) {
+            console.error('Failed to initialize audio:', error);
+            this.initError = this.initError || {
+                reason: 'unavailable',
+                message: error && error.message ? error.message : 'Microphone access failed.'
+            };
+            return false;
+        }
+    }
+
+    classifyMicError(error) {
+        let reason = 'unavailable';
+        if (error && (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError')) {
+            reason = 'denied';
+        } else if (error && (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError')) {
+            reason = 'nodevice';
+        } else if (error && error.name === 'NotReadableError') {
+            reason = 'busy';
+        } else if (error && error.name === 'SecurityError') {
+            reason = 'secure';
+        }
+
+        return {
+            reason,
+            message: error && error.message ? error.message : 'Microphone access failed.'
+        };
+    }
+
+    async startMicrophone() {
+        this.initError = null;
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            this.initError = {
+                reason: 'unsupported',
+                message: 'This browser cannot access a microphone here.'
+            };
+            return false;
+        }
+
+        await this.ensureEngine();
+        this.stopExclusivePlayback();
+
+        if (this.micActive && this.microphone) {
+            return true;
+        }
 
         try {
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                this.initError = {
-                    reason: 'unsupported',
-                    message: 'This browser cannot access a microphone here.'
-                };
-                return false;
-            }
-
             const stream = await navigator.mediaDevices.getUserMedia({
                 audio: {
                     echoCancellation: false,
@@ -56,44 +166,244 @@ class AudioEngine {
                 }
             });
 
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-            this.analyser = this.audioContext.createAnalyser();
-            this.analyser.fftSize = 2048;
-            this.analyser.smoothingTimeConstant = 0.8;
-
+            this.micStream = stream;
             this.microphone = this.audioContext.createMediaStreamSource(stream);
-            this.microphone.connect(this.analyser);
-
-            const bufferLength = this.analyser.frequencyBinCount;
-            this.dataArray = new Uint8Array(bufferLength);
-            this.frequencyData = new Uint8Array(bufferLength);
-
-            this.isRunning = true;
-            this.analyze();
-
-            console.log('Audio Engine initialized');
+            this.connectToAnalyser(this.microphone, { hear: false });
+            this.micActive = true;
             return true;
         } catch (error) {
-            console.error('Failed to initialize audio:', error);
-
-            let reason = 'unavailable';
-            if (error && (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError')) {
-                reason = 'denied';
-            } else if (error && (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError')) {
-                reason = 'nodevice';
-            } else if (error && error.name === 'NotReadableError') {
-                reason = 'busy';
-            } else if (error && error.name === 'SecurityError') {
-                reason = 'secure';
-            }
-
-            this.initError = {
-                reason,
-                message: error && error.message ? error.message : 'Microphone access failed.'
-            };
+            console.error('Failed to start microphone:', error);
+            this.initError = this.classifyMicError(error);
             return false;
         }
+    }
+
+    stopMicrophone() {
+        if (this.microphone) {
+            try {
+                this.microphone.disconnect();
+            } catch (error) {
+                console.warn('Mic disconnect skipped:', error);
+            }
+            this.microphone = null;
+        }
+
+        if (this.micStream) {
+            this.micStream.getTracks().forEach((track) => track.stop());
+            this.micStream = null;
+        }
+
+        this.micActive = false;
+    }
+
+    ensureMediaElement() {
+        if (this.mediaEl && this.mediaSource) {
+            return;
+        }
+
+        this.mediaEl = new Audio();
+        this.mediaEl.crossOrigin = 'anonymous';
+        this.mediaEl.preload = 'auto';
+        this.mediaSource = this.audioContext.createMediaElementSource(this.mediaEl);
+        this.connectToAnalyser(this.mediaSource, { hear: true });
+
+        this.mediaEl.addEventListener('ended', () => {
+            this.exclusivePlaying = false;
+            this.revokeObjectUrls();
+            if (this.onPlaybackEnd) {
+                this.onPlaybackEnd();
+            }
+        });
+
+        this.mediaEl.addEventListener('timeupdate', () => {
+            if (!this.onPlaybackTime || !this.mediaEl) {
+                return;
+            }
+            const duration = this.mediaEl.duration;
+            this.onPlaybackTime({
+                currentTime: this.mediaEl.currentTime || 0,
+                duration: Number.isFinite(duration) ? duration : 0
+            });
+        });
+    }
+
+    stopExclusivePlayback() {
+        if (this.bufferSource) {
+            try {
+                this.bufferSource.onended = null;
+                this.bufferSource.stop();
+            } catch (error) {
+                // already stopped
+            }
+            try {
+                this.bufferSource.disconnect();
+            } catch (error) {
+                // already disconnected
+            }
+            this.bufferSource = null;
+        }
+
+        if (this.mediaEl) {
+            this.mediaEl.pause();
+            this.mediaEl.removeAttribute('src');
+            this.mediaEl.load();
+        }
+
+        this.exclusivePlaying = false;
+        this.revokeObjectUrls();
+    }
+
+    stopOverlays() {
+        this.overlaySources.forEach((source) => {
+            try {
+                source.onended = null;
+                source.stop();
+                source.disconnect();
+            } catch (error) {
+                // already gone
+            }
+        });
+        this.overlaySources = [];
+    }
+
+    revokeObjectUrls() {
+        this.objectUrls.forEach((url) => URL.revokeObjectURL(url));
+        this.objectUrls = [];
+    }
+
+    rememberObjectUrl(url) {
+        this.objectUrls.push(url);
+        return url;
+    }
+
+    notifyPlaybackStart() {
+        this.exclusivePlaying = true;
+        if (this.onPlaybackStart) {
+            this.onPlaybackStart();
+        }
+    }
+
+    async playUrl(url, { stopMic = true } = {}) {
+        await this.unlockPlayback();
+        if (stopMic) {
+            this.stopMicrophone();
+        }
+        this.stopExclusivePlayback();
+        this.ensureMediaElement();
+        this.mediaEl.src = url;
+        this.mediaEl.load();
+        this.notifyPlaybackStart();
+
+        try {
+            await this.mediaEl.play();
+        } catch (error) {
+            await this.unlockPlayback();
+            await this.mediaEl.play();
+        }
+        return true;
+    }
+
+    async playBlob(blob, options = {}) {
+        // Stop and revoke prior URLs first. Creating the object URL before
+        // stopExclusivePlayback used to revoke the fresh blob and break Speak.
+        await this.unlockPlayback();
+        if (options.stopMic !== false) {
+            this.stopMicrophone();
+        }
+        this.stopExclusivePlayback();
+        const url = this.rememberObjectUrl(URL.createObjectURL(blob));
+        this.ensureMediaElement();
+        this.mediaEl.src = url;
+        this.mediaEl.load();
+        this.notifyPlaybackStart();
+
+        try {
+            await this.mediaEl.play();
+        } catch (error) {
+            await this.unlockPlayback();
+            await this.mediaEl.play();
+        }
+        return true;
+    }
+
+    async playBuffer(buffer, { stopMic = true, exclusive = true } = {}) {
+        await this.unlockPlayback();
+        if (stopMic) {
+            this.stopMicrophone();
+        }
+
+        if (exclusive) {
+            this.stopExclusivePlayback();
+        }
+
+        const source = this.audioContext.createBufferSource();
+        source.buffer = buffer;
+        this.connectToAnalyser(source, { hear: true });
+
+        if (exclusive) {
+            this.bufferSource = source;
+            this.notifyPlaybackStart();
+            source.onended = () => {
+                if (this.bufferSource === source) {
+                    this.bufferSource = null;
+                    this.exclusivePlaying = false;
+                    if (this.onPlaybackEnd) {
+                        this.onPlaybackEnd();
+                    }
+                }
+            };
+        } else {
+            this.overlaySources.push(source);
+            source.onended = () => {
+                try {
+                    source.disconnect();
+                } catch (error) {
+                    // already disconnected
+                }
+                this.overlaySources = this.overlaySources.filter((item) => item !== source);
+            };
+        }
+
+        source.start();
+        return true;
+    }
+
+    async loadBuffer(url) {
+        await this.ensureEngine();
+        if (this.bufferCache.has(url)) {
+            return this.bufferCache.get(url);
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Unable to load audio from ${url}`);
+        }
+
+        const bytes = await response.arrayBuffer();
+        const buffer = await this.audioContext.decodeAudioData(bytes.slice(0));
+        this.bufferCache.set(url, buffer);
+        return buffer;
+    }
+
+    async playSample(url, { overlay = false, stopMic = !overlay } = {}) {
+        if (overlay) {
+            const buffer = await this.loadBuffer(url);
+            return this.playBuffer(buffer, { stopMic, exclusive: false });
+        }
+        return this.playUrl(url, { stopMic });
+    }
+
+    getPlaybackProgress() {
+        if (!this.mediaEl || !this.exclusivePlaying) {
+            return { currentTime: 0, duration: 0, ratio: 0 };
+        }
+        const duration = Number.isFinite(this.mediaEl.duration) ? this.mediaEl.duration : 0;
+        const currentTime = this.mediaEl.currentTime || 0;
+        return {
+            currentTime,
+            duration,
+            ratio: duration > 0 ? Math.min(1, currentTime / duration) : 0
+        };
     }
     
     analyze() {
@@ -300,12 +610,30 @@ class AudioEngine {
     
     stop() {
         this.isRunning = false;
-        if (this.microphone) {
-            this.microphone.disconnect();
+        this.stopExclusivePlayback();
+        this.stopOverlays();
+        this.stopMicrophone();
+
+        if (this.mediaSource) {
+            try {
+                this.mediaSource.disconnect();
+            } catch (error) {
+                // already disconnected
+            }
+            this.mediaSource = null;
         }
+
+        this.mediaEl = null;
+        this.bufferCache.clear();
+
         if (this.audioContext) {
             this.audioContext.close();
+            this.audioContext = null;
         }
+
+        this.analyser = null;
+        this.bus = null;
+        this.hear = null;
     }
 }
 
